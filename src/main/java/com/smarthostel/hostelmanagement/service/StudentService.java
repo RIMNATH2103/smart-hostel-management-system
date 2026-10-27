@@ -1,3 +1,4 @@
+
 package com.smarthostel.hostelmanagement.service;
 
 import com.smarthostel.hostelmanagement.entity.Student;
@@ -20,18 +21,22 @@ public class StudentService {
         this.passwordEncoder = passwordEncoder;
     }
 
+    // Get all students
     public List<Student> getAllStudents() {
         return studentRepository.findAll();
     }
 
+    // Get student by database ID
     public Optional<Student> getStudentById(Long id) {
         return studentRepository.findById(id);
     }
 
+    // Get student by email
     public Optional<Student> getStudentByEmail(String email) {
         return studentRepository.findByEmail(email);
     }
 
+    // Get student by registration number
     public Optional<Student> getStudentByStudentId(String studentId) {
         return studentRepository.findByStudentId(studentId);
     }
@@ -44,6 +49,7 @@ public class StudentService {
         return !studentRepository.existsByStudentId(studentId);
     }
 
+    // Validate student registration
     public void validateNewStudent(Student student) {
 
         if (student == null) {
@@ -52,9 +58,33 @@ public class StudentService {
             );
         }
 
-        String fullName = student.getFullName();
+        validateStudentDetails(student);
 
-        if (fullName == null || fullName.isBlank()) {
+        if (student.getPassword() == null
+                || student.getPassword().length() < 8) {
+            throw new IllegalArgumentException(
+                    "Password must contain at least 8 characters."
+            );
+        }
+
+        if (!isEmailAvailable(student.getEmail())) {
+            throw new IllegalArgumentException(
+                    "This email address is already registered."
+            );
+        }
+
+        if (!isStudentIdAvailable(student.getStudentId())) {
+            throw new IllegalArgumentException(
+                    "This student registration number is already registered."
+            );
+        }
+    }
+
+    // Validate common student information
+    private void validateStudentDetails(Student student) {
+
+        if (student.getFullName() == null
+                || student.getFullName().isBlank()) {
             throw new IllegalArgumentException(
                     "Student full name is required."
             );
@@ -62,66 +92,94 @@ public class StudentService {
 
         String phoneNumber = student.getPhoneNumber();
 
-        if (phoneNumber == null || phoneNumber.isBlank()) {
-            throw new IllegalArgumentException(
-                    "Student phone number is required."
-            );
-        }
-
-        if (!phoneNumber.matches("\\+?[0-9]{10,15}")) {
+        if (phoneNumber == null
+                || !phoneNumber.matches("\\+?[0-9]{10,15}")) {
             throw new IllegalArgumentException(
                     "Please enter a valid phone number (10 to 15 digits)."
             );
         }
 
-        String password = student.getPassword();
-
-        if (password == null || password.length() < 8) {
-            throw new IllegalArgumentException(
-                    "Password must contain at least 8 characters."
-            );
-        }
-
         String email = student.getEmail();
 
-        if (email == null || email.isBlank()
-                || !email.matches("^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")) {
+        if (email == null
+                || !email.matches(
+                "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")) {
             throw new IllegalArgumentException(
                     "Please enter a valid email address."
             );
         }
 
-        if (!isEmailAvailable(email)) {
+        if (student.getStudentId() == null
+                || student.getStudentId().isBlank()) {
+            throw new IllegalArgumentException(
+                    "Student registration number is required."
+            );
+        }
+    }
+
+    // CREATE: Register a new student
+    public Student registerStudent(Student student) {
+
+        validateNewStudent(student);
+
+        student.setPassword(
+                passwordEncoder.encode(student.getPassword())
+        );
+
+        return studentRepository.save(student);
+    }
+
+    // UPDATE: Edit existing student information
+    public Student updateStudent(Long id, Student updatedStudent) {
+
+        Student existingStudent = studentRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Student not found."
+                ));
+
+        if (updatedStudent == null) {
+            throw new IllegalArgumentException(
+                    "Student information is required."
+            );
+        }
+
+        validateStudentDetails(updatedStudent);
+
+        // Check email uniqueness when email changes
+        if (!existingStudent.getEmail()
+                .equals(updatedStudent.getEmail())
+                && !isEmailAvailable(updatedStudent.getEmail())) {
             throw new IllegalArgumentException(
                     "This email address is already registered."
             );
         }
 
-        String studentId = student.getStudentId();
-
-        if (studentId == null || studentId.isBlank()) {
-            throw new IllegalArgumentException(
-                    "Student registration number is required."
-            );
-        }
-
-        if (!isStudentIdAvailable(studentId)) {
+        // Check registration number uniqueness
+        if (!existingStudent.getStudentId()
+                .equals(updatedStudent.getStudentId())
+                && !isStudentIdAvailable(updatedStudent.getStudentId())) {
             throw new IllegalArgumentException(
                     "This student registration number is already registered."
             );
         }
+
+        existingStudent.setFullName(updatedStudent.getFullName());
+        existingStudent.setEmail(updatedStudent.getEmail());
+        existingStudent.setPhoneNumber(updatedStudent.getPhoneNumber());
+        existingStudent.setStudentId(updatedStudent.getStudentId());
+
+        // Existing password remains unchanged
+        return studentRepository.save(existingStudent);
     }
 
-    public Student registerStudent(Student student) {
+    // DELETE: Remove a student record
+    public void deleteStudent(Long id) {
 
-        validateNewStudent(student);
+        Student student = studentRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Student not found."
+                ));
 
-        String hashedPassword = passwordEncoder.encode(
-                student.getPassword()
-        );
-
-        student.setPassword(hashedPassword);
-
-        return studentRepository.save(student);
+        studentRepository.delete(student);
     }
 }

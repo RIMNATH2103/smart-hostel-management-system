@@ -1,6 +1,7 @@
 
 package com.smarthostel.hostelmanagement.entity;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 
 @Entity
@@ -20,6 +21,8 @@ public class Student {
     @Column(nullable = false, unique = true)
     private String email;
 
+    // Accept password in requests, but never return it in JSON
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @Column(name = "password_hash", nullable = false)
     private String password;
 
