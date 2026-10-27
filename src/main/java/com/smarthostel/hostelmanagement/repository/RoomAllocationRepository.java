@@ -5,4 +5,6 @@ import com.smarthostel.hostelmanagement.entity.RoomAllocation;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface RoomAllocationRepository extends JpaRepository<RoomAllocation, Long> {
+
+    boolean existsByStudent_Id(Long studentId);
 }
