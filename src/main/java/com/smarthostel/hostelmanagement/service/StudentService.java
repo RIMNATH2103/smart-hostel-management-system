@@ -216,4 +216,29 @@ public class StudentService {
 
         studentRepository.delete(student);
     }
+
+    // Check student login credentials
+    public Optional<Student> authenticateStudent(
+            String username, String password) {
+
+        if (username == null || password == null) {
+            return Optional.empty();
+        }
+
+        if (!username.matches("EG/[0-9]{4}/[0-9]{4}")) {
+            return Optional.empty();
+        }
+
+        Optional<Student> student = studentRepository
+                .findByStudentId(username);
+
+        if (student.isPresent()
+                && passwordEncoder.matches(
+                password, student.get().getPassword())) {
+            return student;
+        }
+
+        return Optional.empty();
+    }
+
 }

@@ -1,0 +1,499 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap');
+
+/* Global styles */
+
+:root {
+    --dark: #17253d;
+    --purple: #7454d6;
+    --teal: #17b6a4;
+    --orange: #ff9858;
+    --light: #f7f8fc;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: 'Outfit', Arial, sans-serif;
+    background: var(--light);
+    color: var(--dark);
+    line-height: 1.6;
+}
+
+/* Navigation bar */
+
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 8%;
+    background: white;
+    box-shadow: 0 3px 18px rgba(0, 0, 0, 0.05);
+}
+
+.logo {
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--purple);
+}
+
+.navbar nav {
+    display: flex;
+    gap: 30px;
+}
+
+.navbar nav a {
+    text-decoration: none;
+    color: var(--dark);
+    font-weight: 600;
+}
+
+.navbar nav a:hover {
+    color: var(--purple);
+}
+
+/* Homepage hero section */
+
+.hero {
+    min-height: 500px;
+    display: flex;
+    align-items: center;
+    padding: 80px 8%;
+    background: linear-gradient(120deg, #ede7ff, #e0faf4, #fff0e4);
+}
+
+.hero-content {
+    max-width: 720px;
+}
+
+.hero h1 {
+    font-size: clamp(36px, 5vw, 62px);
+    line-height: 1.15;
+    font-weight: 800;
+    margin-bottom: 22px;
+}
+
+.hero p {
+    font-size: 19px;
+    color: #596477;
+    margin-bottom: 32px;
+}
+
+.hero-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.btn {
+    display: inline-block;
+    padding: 14px 28px;
+    border-radius: 12px;
+    color: white;
+    font-weight: 700;
+    text-decoration: none;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+}
+
+.student-btn {
+    background: var(--purple);
+}
+
+.admin-btn {
+    background: var(--teal);
+}
+
+/* Features section */
+
+.features {
+    padding: 75px 8%;
+    text-align: center;
+}
+
+.features h2,
+.about h2 {
+    font-size: 34px;
+    margin-bottom: 35px;
+}
+
+.feature-container {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 22px;
+}
+
+.feature-card {
+    padding: 30px 22px;
+    background: white;
+    border-radius: 18px;
+    box-shadow: 0 6px 25px rgba(25, 35, 60, 0.06);
+    text-align: left;
+    border-top: 4px solid var(--purple);
+}
+
+.feature-card:nth-child(2) {
+    border-top-color: var(--teal);
+}
+
+.feature-card:nth-child(3) {
+    border-top-color: var(--orange);
+}
+
+.feature-card:nth-child(4) {
+    border-top-color: #ed6c9d;
+}
+
+.feature-card h3 {
+    font-size: 19px;
+    margin-bottom: 12px;
+}
+
+.feature-card p {
+    color: #647084;
+    font-size: 15px;
+}
+
+/* About section */
+
+.about {
+    padding: 70px 8%;
+    background: white;
+    text-align: center;
+}
+
+.about p {
+    max-width: 650px;
+    margin: 0 auto;
+    color: #647084;
+    font-size: 17px;
+}
+
+/* Footer */
+
+footer {
+    padding: 22px;
+    background: var(--dark);
+    color: white;
+    text-align: center;
+}
+
+/* Homepage responsive design */
+
+@media (max-width: 1000px) {
+    .feature-container {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 600px) {
+    .navbar {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .navbar nav {
+        gap: 18px;
+    }
+
+    .hero {
+        padding: 65px 6%;
+    }
+
+    .feature-container {
+        grid-template-columns: 1fr;
+    }
+
+    .features,
+    .about {
+        padding: 55px 6%;
+    }
+}
+
+/* ==================================
+   Student Login Page
+   ================================== */
+
+.login-page {
+    min-height: 100vh;
+    background: #f0f2f8;
+}
+
+.login-page .navbar {
+    position: relative;
+    z-index: 2;
+    box-shadow: none;
+    border-bottom: 1px solid #e9eaf0;
+}
+
+.login-container {
+    min-height: calc(100vh - 80px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 50px 24px;
+}
+
+/* Main login card */
+
+
+.login-card {
+    position: relative;
+    width: 100%;
+    max-width: 950px;
+    min-height: 510px;
+    padding: 65px 50% 55px 65px;
+    background: white;
+    border-radius: 24px;
+    box-shadow: 0 18px 55px rgba(36, 42, 72, 0.09);
+    overflow: hidden;
+}
+
+
+/* Purple decorative panel */
+
+.login-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 45%;
+    background:
+            radial-gradient(
+                    circle at 85% 15%,
+                    rgba(255, 255, 255, 0.18) 0 12%,
+                    transparent 13%
+            ),
+            radial-gradient(
+                    circle at 15% 85%,
+                    rgba(46, 208, 188, 0.35) 0 18%,
+                    transparent 19%
+            ),
+            linear-gradient(145deg, #7854db, #43358e);
+}
+
+.login-card::after {
+    content: "YOUR HOSTEL,\A SIMPLIFIED.\A\A A better way to manage\A your student accommodation.";
+    white-space: pre-line;
+    position: absolute;
+    top: 38%;
+    right: 5%;
+    width: 35%;
+    color: white;
+    font-size: 21px;
+    font-weight: 700;
+    line-height: 1.5;
+    text-align: left;
+    pointer-events: none;
+}
+
+/* Login heading */
+
+.login-heading {
+    position: relative;
+    z-index: 1;
+    margin-bottom: 30px;
+    text-align: left;
+}
+
+.login-icon {
+    width: 58px;
+    height: 58px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+    background: #f0eaff;
+    border-radius: 16px;
+    font-size: 28px;
+}
+
+.login-heading h1 {
+    margin-bottom: 8px;
+    color: #263149;
+    font-size: 31px;
+    font-weight: 800;
+}
+
+.login-heading p {
+    color: #7b8496;
+    font-size: 14px;
+}
+
+/* Login form */
+
+
+#studentLoginForm {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    min-width: 260px;
+}
+
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: #34405a;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.form-group input {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    padding: 14px 15px;
+    background: #f7f8fb;
+    border: 1px solid #e3e6ee;
+    border-radius: 10px;
+    color: #263149;
+    font-family: inherit;
+    font-size: 15px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-group input::placeholder {
+    color: #9ba3b2;
+}
+
+.form-group input:focus {
+    border-color: var(--purple);
+    box-shadow: 0 0 0 3px rgba(116, 84, 214, 0.12);
+}
+
+/* Sign In button */
+
+.login-submit {
+    display: block;
+    width: 100%;
+    margin-top: 8px;
+    padding: 15px;
+    background: var(--purple);
+    border: none;
+    border-radius: 10px;
+    color: white;
+    font-family: inherit;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.login-submit:hover {
+    background: #6040bd;
+}
+
+/* Login messages */
+
+.login-message {
+    margin-bottom: 12px;
+    color: #d74759;
+    font-size: 14px;
+    text-align: center;
+}
+
+.login-message:empty {
+    display: none;
+}
+
+.login-footer-text {
+    position: relative;
+    z-index: 1;
+    margin-top: 24px;
+    color: #7b8496;
+    font-size: 13px;
+    text-align: center;
+}
+
+.login-footer-text span {
+    color: var(--purple);
+    font-weight: 600;
+}
+
+/* ==================================
+   Responsive Login Design
+   ================================== */
+
+/* Switch to single-column layout before
+   the login form becomes too narrow */
+
+
+@media (max-width: 1100px) {
+    .login-card {
+        max-width: 520px;
+        min-height: auto;
+        padding: 45px 40px;
+    }
+
+    .login-card::before,
+    .login-card::after {
+        display: none;
+    }
+
+    .login-heading h1 {
+        font-size: 29px;
+    }
+
+    #studentLoginForm {
+        min-width: 0;
+    }
+}
+
+
+/* Tablet and smaller screens */
+
+@media (max-width: 600px) {
+    .login-container {
+        min-height: calc(100vh - 110px);
+        padding: 35px 18px;
+    }
+
+    .login-card {
+        padding: 38px 30px;
+        border-radius: 20px;
+    }
+}
+
+/* Mobile phones */
+
+@media (max-width: 480px) {
+    .login-container {
+        padding: 25px 16px;
+    }
+
+    .login-card {
+        padding: 32px 22px;
+        border-radius: 18px;
+    }
+
+    .login-heading h1 {
+        font-size: 27px;
+    }
+
+    .login-heading p {
+        font-size: 13px;
+    }
+
+    .form-group input {
+        font-size: 14px;
+    }
+}
