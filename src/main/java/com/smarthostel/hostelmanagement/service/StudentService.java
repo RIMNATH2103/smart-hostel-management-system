@@ -64,8 +64,9 @@ public class StudentService {
         return !studentRepository.existsByStudentId(studentId);
     }
 
+
     // Validate new student registration
-    public void validateNewStudent(Student student) {
+    private void validateNewStudent(Student student) {
 
         if (student == null) {
             throw new IllegalArgumentException(
@@ -82,20 +83,22 @@ public class StudentService {
             );
         }
 
-        if (!isEmailAvailable(student.getEmail())) {
+        if (studentRepository.existsByEmail(student.getEmail())) {
             throw new IllegalArgumentException(
-                    "This email address is already registered."
+                    "Email is already registered."
             );
         }
 
-        if (!isStudentIdAvailable(student.getStudentId())) {
+        if (studentRepository.existsByStudentId(student.getStudentId())) {
             throw new IllegalArgumentException(
-                    "This student registration number is already registered."
+                    "Student username is already registered."
             );
         }
     }
 
+
     // Validate common student information
+
     private void validateStudentDetails(Student student) {
 
         if (student.getFullName() == null
@@ -124,13 +127,16 @@ public class StudentService {
             );
         }
 
-        if (student.getStudentId() == null
-                || student.getStudentId().isBlank()) {
+        String studentId = student.getStudentId();
+
+        if (studentId == null
+                || !studentId.matches("EG/[0-9]{4}/[0-9]{4}")) {
             throw new IllegalArgumentException(
-                    "Student registration number is required."
+                    "Student registration number must follow EG/YYYY/NNNN format."
             );
         }
     }
+
 
     // CREATE: Register a new student
     public Student registerStudent(Student student) {

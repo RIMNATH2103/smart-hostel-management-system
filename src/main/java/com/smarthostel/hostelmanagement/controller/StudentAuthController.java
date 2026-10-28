@@ -52,6 +52,23 @@ public class StudentAuthController {
         );
     }
 
+    // Log out the student and end their session
+    @PostMapping("/logout")
+    public ResponseEntity<Map<String, String>> logout(
+            HttpServletRequest request) {
+
+        HttpSession session = request.getSession(false);
+
+        if (session != null) {
+            session.invalidate();
+        }
+
+        return ResponseEntity.ok(
+                Map.of("message", "Logged out successfully.")
+        );
+    }
+
+
     public record LoginRequest(String username, String password) {
     }
 }

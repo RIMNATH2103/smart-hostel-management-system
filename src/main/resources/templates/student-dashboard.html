@@ -1,0 +1,161 @@
+
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard | Smart Hostel</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}" href="/css/style.css">
+</head>
+<body class="dashboard-page">
+
+<header class="navbar">
+    <div class="logo">🏠 Smart Hostel</div>
+
+
+    <nav>
+        <a th:href="@{/student/dashboard}" href="/student/dashboard">Dashboard</a>
+        <a th:href="@{/}" href="/">Home</a>
+
+        <button type="button" id="logoutButton" class="logout-btn">
+            Logout
+        </button>
+    </nav>
+
+</header>
+
+<main class="dashboard-container">
+
+
+    <section class="dashboard-welcome">
+        <h1>
+            Welcome, <span th:text="${studentName}">Student</span>! 🎓
+        </h1>
+        <p>Manage your hostel accommodation in one place.</p>
+    </section>
+
+
+    <section class="dashboard-grid">
+
+
+        <article class="dashboard-feature">
+            <div class="dashboard-feature-icon">🏠</div>
+            <h2>My Room</h2>
+
+            <!-- Show room details when the student has a room -->
+            <div th:if="${hasRoom}">
+                <p>
+                    <strong>Room Number:</strong>
+                    <span th:text="${roomNumber}">A101</span>
+                </p>
+
+                <p>
+                    <strong>Capacity:</strong>
+                    <span th:text="${roomCapacity}">4</span> students
+                </p>
+
+                <p>
+                    <strong>Occupied Slots:</strong>
+                    <span th:text="${roomOccupancy}">0</span>
+                    / <span th:text="${roomCapacity}">4</span>
+                </p>
+
+
+                <span class="dashboard-feature-status">
+    Room Allocated
+</span>
+
+                <!-- Display current roommates -->
+                <div class="roommates-section">
+                    <h3>My Roommates</h3>
+
+                    <!-- Show when there are no other students -->
+                    <p th:if="${#lists.isEmpty(roommates)}">
+                        No roommates assigned yet.
+                    </p>
+
+                    <!-- Display each roommate -->
+                    <ul th:unless="${#lists.isEmpty(roommates)}"
+                        class="roommates-list">
+
+                        <li th:each="roommate : ${roommates}">
+                            <strong th:text="${roommate.fullName}">
+                                Student Name
+                            </strong>
+
+                            <span th:text="${roommate.studentId}">
+                EG/2026/0001
+            </span>
+                        </li>
+                    </ul>
+                </div>
+
+            </div>
+
+            <!-- Show this message when no room is assigned -->
+            <div th:unless="${hasRoom}">
+                <p>You have not been assigned a hostel room yet.</p>
+
+                <span class="dashboard-feature-status">
+            Not Allocated
+        </span>
+            </div>
+        </article>
+
+
+
+        <article class="dashboard-feature">
+            <div class="dashboard-feature-icon">👥</div>
+
+            <h2>Roommate Preferences</h2>
+
+            <p>
+                Select up to 3 preferred roommates and
+                view your saved selections.
+            </p>
+
+            <a th:href="@{/student/roommates}"
+               href="/student/roommates"
+               class="roommate-link">
+                Manage Roommates
+            </a>
+        </article>
+
+
+        <article class="dashboard-feature">
+            <div class="dashboard-feature-icon">📋</div>
+            <h2>Vacate Request</h2>
+            <p>Submit a request to vacate your assigned room.</p>
+            <span class="dashboard-feature-status">Coming soon</span>
+        </article>
+
+    </section>
+
+</main>
+
+
+<script>
+    document.getElementById("logoutButton").addEventListener("click", async function () {
+        try {
+            const response = await fetch("/api/student-auth/logout", {
+                method: "POST",
+                credentials: "same-origin"
+            });
+
+            if (response.ok) {
+                window.location.href = "/student/login";
+            } else {
+                alert("Logout failed. Please try again.");
+            }
+        } catch (error) {
+            alert("Unable to connect to the server.");
+        }
+    });
+</script>
+
+</body>
+</html>
+
+
+</body>
+</html>

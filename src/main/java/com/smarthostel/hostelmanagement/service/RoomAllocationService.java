@@ -28,6 +28,12 @@ public class RoomAllocationService {
         return allocationRepository.findById(id);
     }
 
+    // Find the current room allocation for a student
+    public Optional<RoomAllocation> getCurrentAllocation(Long studentId) {
+        return allocationRepository
+                .findByStudent_IdAndVacatedAtIsNull(studentId);
+    }
+
     // Get active allocations for a room
     public List<RoomAllocation> getActiveAllocations(Long roomId) {
         return allocationRepository.findAll()

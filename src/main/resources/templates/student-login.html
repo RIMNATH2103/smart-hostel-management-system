@@ -51,8 +51,10 @@
                         required>
             </div>
 
-            <p id="loginMessage" class="login-message"
-               role="status" aria-live="polite"></p>
+            <p id="loginMessage"
+               class="login-message"
+               role="status"
+               aria-live="polite"></p>
 
             <button type="submit" class="login-submit">
                 Sign In
@@ -65,6 +67,60 @@
         </p>
     </section>
 </main>
+
+<script>
+    const loginForm = document.getElementById("studentLoginForm");
+    const loginMessage = document.getElementById("loginMessage");
+    const loginButton = loginForm.querySelector("button[type='submit']");
+
+    loginForm.addEventListener("submit", async function (event) {
+        event.preventDefault();
+
+        const username = document.getElementById("username").value.trim();
+        const password = document.getElementById("password").value;
+
+        loginMessage.textContent = "";
+        loginButton.disabled = true;
+        loginButton.textContent = "Signing In...";
+
+        try {
+            const response = await fetch("/api/student-auth/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                credentials: "same-origin",
+                body: JSON.stringify({
+                    username: username,
+                    password: password
+                })
+            });
+
+            const result = await response.json();
+
+
+            if (response.ok) {
+                loginMessage.style.color = "#17b6a4";
+                loginMessage.textContent = "Login successful!";
+
+                window.location.href = "/student/dashboard";
+            }
+            else {
+                loginMessage.style.color = "#d74759";
+                loginMessage.textContent =
+                    result.message || "Invalid username or password.";
+            }
+
+        } catch (error) {
+            loginMessage.style.color = "#d74759";
+            loginMessage.textContent =
+                "Unable to connect to the server. Please try again.";
+        } finally {
+            loginButton.disabled = false;
+            loginButton.textContent = "Sign In";
+        }
+    });
+</script>
 
 </body>
 </html>

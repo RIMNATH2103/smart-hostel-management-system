@@ -1,0 +1,334 @@
+
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Roommate Preferences | Smart Hostel</title>
+
+    <link rel="stylesheet"
+          th:href="@{/css/style.css}"
+          href="/css/style.css">
+</head>
+
+<body class="dashboard-page">
+
+<header class="navbar">
+    <div class="logo">🏠 Smart Hostel</div>
+
+    <nav>
+        <a href="/student/dashboard">Dashboard</a>
+        <a href="/student/roommates">Roommate Preferences</a>
+    </nav>
+</header>
+
+<main class="dashboard-container">
+
+    <!-- Page heading -->
+    <section class="dashboard-welcome">
+        <h1>Choose Your Roommates 👥</h1>
+
+        <p>
+            Select up to 3 students you would like
+            to share your hostel room with.
+        </p>
+    </section>
+
+    <!-- Available students -->
+    <section class="dashboard-feature">
+
+        <h2>Available Students</h2>
+
+        <p>
+            Select a student from the list below.
+        </p>
+
+        <div class="roommate-selection">
+
+            <label for="studentSelect">
+                Preferred Roommate
+            </label>
+
+            <select id="studentSelect">
+                <option value="">
+                    Loading students...
+                </option>
+            </select>
+
+            <button type="button"
+                    id="addRoommateButton"
+                    class="logout-btn">
+                Add Roommate
+            </button>
+
+        </div>
+
+        <p id="preferenceMessage"
+           role="status"
+           aria-live="polite"></p>
+
+    </section>
+
+    <!-- Selected roommates -->
+    <section class="dashboard-feature"
+             style="margin-top: 25px;">
+
+        <h2>My Selected Roommates</h2>
+
+        <p>
+            You can select a maximum of 3 roommates.
+        </p>
+
+        <ul id="selectedRoommates"
+            class="roommates-list">
+            <li>Loading preferences...</li>
+        </ul>
+
+    </section>
+
+</main>
+
+<script>
+
+    // Load available students from the backend
+    async function loadAvailableStudents() {
+
+        const studentSelect =
+            document.getElementById("studentSelect");
+
+        try {
+
+            const response = await fetch(
+                "/api/roommate-preferences/available-students",
+                {
+                    credentials: "same-origin"
+                }
+            );
+
+            if (response.status === 401) {
+                window.location.href = "/student/login";
+                return;
+            }
+
+            if (!response.ok) {
+                throw new Error("Failed to load students.");
+            }
+
+            const students = await response.json();
+
+            studentSelect.innerHTML = "";
+
+            const defaultOption =
+                document.createElement("option");
+
+            defaultOption.value = "";
+            defaultOption.textContent = "Select a student";
+
+            studentSelect.appendChild(defaultOption);
+
+            students.forEach(function (student) {
+
+                const option =
+                    document.createElement("option");
+
+                option.value = student.id;
+
+                option.textContent =
+                    student.fullName +
+                    " (" + student.studentId + ")";
+
+                studentSelect.appendChild(option);
+            });
+
+            if (students.length === 0) {
+                defaultOption.textContent =
+                    "No students available";
+            }
+
+        } catch (error) {
+
+            studentSelect.innerHTML = "";
+
+            const errorOption =
+                document.createElement("option");
+
+            errorOption.value = "";
+            errorOption.textContent =
+                "Unable to load students";
+
+            studentSelect.appendChild(errorOption);
+        }
+    }
+
+
+    // Load the logged-in student's saved preferences
+    async function loadSelectedRoommates() {
+
+        const roommateList =
+            document.getElementById("selectedRoommates");
+
+        try {
+
+            const response = await fetch(
+                "/api/roommate-preferences/my",
+                {
+                    credentials: "same-origin"
+                }
+            );
+
+            if (response.status === 401) {
+                window.location.href = "/student/login";
+                return;
+            }
+
+            if (!response.ok) {
+                throw new Error("Failed to load preferences.");
+            }
+
+            const roommates = await response.json();
+
+            roommateList.innerHTML = "";
+
+            if (roommates.length === 0) {
+
+                const item =
+                    document.createElement("li");
+
+                item.textContent =
+                    "No roommates selected yet.";
+
+                roommateList.appendChild(item);
+                return;
+            }
+
+            roommates.forEach(function (roommate) {
+
+                const item =
+                    document.createElement("li");
+
+                const name =
+                    document.createElement("strong");
+
+                name.textContent = roommate.fullName;
+
+                const registration =
+                    document.createElement("span");
+
+                registration.textContent = roommate.studentId;
+
+                item.appendChild(name);
+                item.appendChild(registration);
+
+                roommateList.appendChild(item);
+            });
+
+        } catch (error) {
+
+            roommateList.innerHTML = "";
+
+            const item =
+                document.createElement("li");
+
+            item.textContent =
+                "Unable to load selected roommates.";
+
+            roommateList.appendChild(item);
+        }
+    }
+
+
+    // Save the selected roommate
+    document.getElementById("addRoommateButton")
+        .addEventListener("click", async function () {
+
+            const studentSelect =
+                document.getElementById("studentSelect");
+
+            const message =
+                document.getElementById("preferenceMessage");
+
+            const addButton =
+                document.getElementById("addRoommateButton");
+
+            const preferredStudentId = studentSelect.value;
+
+            if (!preferredStudentId) {
+
+                message.textContent =
+                    "Please select a student first.";
+
+                message.style.color = "#dc3545";
+                return;
+            }
+
+            addButton.disabled = true;
+
+            message.textContent =
+                "Saving roommate preference...";
+
+            message.style.color = "#647084";
+
+            try {
+
+                const response = await fetch(
+                    "/api/roommate-preferences/my",
+                    {
+                        method: "POST",
+                        credentials: "same-origin",
+
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+
+                        body: JSON.stringify({
+                            preferredStudentId:
+                                Number(preferredStudentId)
+                        })
+                    }
+                );
+
+                if (response.status === 401) {
+                    window.location.href = "/student/login";
+                    return;
+                }
+
+                const result = await response.json();
+
+                message.textContent = result.message;
+
+                message.style.color = response.ok
+                    ? "#159b82"
+                    : "#dc3545";
+
+                if (response.ok) {
+
+                    studentSelect.value = "";
+
+                    // Refresh the list immediately
+                    await loadSelectedRoommates();
+                }
+
+            } catch (error) {
+
+                message.textContent =
+                    "Unable to save roommate preference.";
+
+                message.style.color = "#dc3545";
+
+            } finally {
+
+                addButton.disabled = false;
+            }
+        });
+
+
+    // Load data when the page opens
+    loadAvailableStudents();
+    loadSelectedRoommates();
+
+</script>
+
+</body>
+</html>
