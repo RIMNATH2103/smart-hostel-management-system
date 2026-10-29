@@ -1,0 +1,170 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login | Smart Hostel</title>
+
+    <link rel="stylesheet" href="/css/style.css">
+
+    <style>
+        .admin-login-container {
+            max-width: 440px;
+            margin: 70px auto;
+            padding: 0 20px;
+        }
+
+        .admin-login-card {
+            background: white;
+            padding: 35px;
+            border-radius: 18px;
+            box-shadow: 0 10px 30px rgba(50, 35, 80, 0.12);
+        }
+
+        .admin-login-card h1 {
+            color: #493477;
+            margin-bottom: 10px;
+        }
+
+        .admin-login-card p {
+            color: #666;
+            margin-bottom: 25px;
+        }
+
+        .admin-login-card label {
+            display: block;
+            margin: 15px 0 7px;
+            font-weight: 600;
+        }
+
+        .admin-login-card input {
+            width: 100%;
+            padding: 13px;
+            border: 1px solid #d5cfe3;
+            border-radius: 10px;
+            font: inherit;
+            box-sizing: border-box;
+        }
+
+        .admin-login-button {
+            width: 100%;
+            margin-top: 24px;
+            padding: 13px;
+            border: none;
+            border-radius: 10px;
+            background: #168b83;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .admin-login-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .admin-login-message {
+            margin-top: 15px;
+            color: #b53e52;
+        }
+
+        .admin-back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #493477;
+            text-decoration: none;
+            font-weight: 600;
+        }
+    </style>
+</head>
+
+<body>
+
+<main class="admin-login-container">
+
+    <a href="/" class="admin-back-link">← Back to Home</a>
+
+    <section class="admin-login-card">
+        <h1>Admin Login</h1>
+        <p>Sign in to manage the Smart Hostel Management System.</p>
+
+        <form id="adminLoginForm">
+            <label for="adminEmail">Email Address</label>
+            <input
+                    type="email"
+                    id="adminEmail"
+                    placeholder="Enter your admin email"
+                    autocomplete="username"
+                    required>
+
+            <label for="adminPassword">Password</label>
+            <input
+                    type="password"
+                    id="adminPassword"
+                    placeholder="Enter your password"
+                    autocomplete="current-password"
+                    required>
+
+            <button
+                    type="submit"
+                    class="admin-login-button"
+                    id="adminLoginButton">
+                Login as Admin
+            </button>
+        </form>
+
+        <p id="adminLoginMessage"
+           class="admin-login-message"
+           role="alert"></p>
+    </section>
+
+</main>
+
+<script>
+    const adminLoginForm = document.getElementById("adminLoginForm");
+    const adminLoginButton = document.getElementById("adminLoginButton");
+    const adminLoginMessage = document.getElementById("adminLoginMessage");
+
+    adminLoginForm.addEventListener("submit", async function (event) {
+        event.preventDefault();
+
+        const email = document.getElementById("adminEmail").value.trim();
+        const password = document.getElementById("adminPassword").value;
+
+        adminLoginButton.disabled = true;
+        adminLoginMessage.textContent = "";
+
+        try {
+            const response = await fetch("/api/admin-auth/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    email: email,
+                    password: password
+                })
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                window.location.href = "/admin/dashboard";
+                return;
+            }
+
+            adminLoginMessage.textContent =
+                result.message || "Unable to log in.";
+
+        } catch (error) {
+            adminLoginMessage.textContent =
+                "Something went wrong. Please try again.";
+        } finally {
+            adminLoginButton.disabled = false;
+        }
+    });
+</script>
+
+</body>
+</html>

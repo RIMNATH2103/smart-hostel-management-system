@@ -137,4 +137,55 @@ public class HomeController {
         return "student-roommates";
     }
 
+    @GetMapping("/student/vacate-request")
+    public String showVacateRequestPage(HttpSession session) {
+
+        Object studentId = session.getAttribute("studentId");
+
+        if (!(studentId instanceof Long)) {
+            return "redirect:/student/login";
+        }
+
+        return "student-vacate-request";
+    }
+
+    @GetMapping("/admin/login")
+    public String showAdminLoginPage(HttpSession session) {
+
+        Object adminId = session.getAttribute("adminId");
+
+        if (adminId instanceof Long) {
+            return "redirect:/admin/dashboard";
+        }
+
+        return "admin-login";
+    }
+
+    @GetMapping("/admin/dashboard")
+    public String showAdminDashboard(HttpSession session, Model model) {
+
+        Object adminId = session.getAttribute("adminId");
+
+        // Only logged-in administrators can access this page
+        if (!(adminId instanceof Long)) {
+            return "redirect:/admin/login";
+        }
+
+        // Verify that the administrator still exists
+        return "admin-dashboard";
+    }
+
+    @GetMapping("/admin/vacate-requests")
+    public String showAdminVacateRequestsPage(HttpSession session) {
+
+        Object adminId = session.getAttribute("adminId");
+
+        // Only logged-in administrators can open this page
+        if (!(adminId instanceof Long)) {
+            return "redirect:/admin/login";
+        }
+
+        return "admin-vacate-requests";
+    }
+
 }

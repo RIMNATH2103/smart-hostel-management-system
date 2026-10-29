@@ -1,0 +1,208 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard | Smart Hostel</title>
+    <link rel="stylesheet" href="/css/style.css">
+
+    <style>
+        .admin-nav {
+            background: #493477;
+            padding: 20px 7%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .admin-nav h2 {
+            color: white;
+            margin: 0;
+        }
+
+        .admin-logout {
+            background: #ffffff;
+            color: #493477;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 9px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .admin-container {
+            max-width: 1100px;
+            margin: 45px auto;
+            padding: 0 20px;
+        }
+
+        .admin-heading {
+            margin-bottom: 30px;
+        }
+
+        .admin-heading h1 {
+            color: #493477;
+            margin-bottom: 10px;
+        }
+
+        .admin-heading p {
+            color: #666;
+        }
+
+        .admin-grid {
+            display: grid;
+            grid-template-columns: repeat(
+                auto-fit,
+                minmax(240px, 1fr)
+            );
+            gap: 22px;
+        }
+
+        .admin-card {
+            background: white;
+            border-radius: 16px;
+            padding: 28px;
+            box-shadow: 0 8px 25px rgba(40, 30, 70, 0.09);
+        }
+
+        .admin-card-icon {
+            font-size: 35px;
+            margin-bottom: 15px;
+        }
+
+        .admin-card h2 {
+            color: #493477;
+            font-size: 21px;
+            margin-bottom: 12px;
+        }
+
+        .admin-card p {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .admin-card-link {
+            display: inline-block;
+            padding: 11px 17px;
+            background: #168b83;
+            color: white;
+            text-decoration: none;
+            border-radius: 9px;
+            font-weight: 600;
+        }
+
+        .admin-coming-soon {
+            color: #777;
+            font-weight: 600;
+        }
+    </style>
+</head>
+
+<body>
+
+<nav class="admin-nav">
+    <h2>Smart Hostel | Admin</h2>
+
+    <button class="admin-logout" id="adminLogoutButton">
+        Logout
+    </button>
+</nav>
+
+<main class="admin-container">
+
+    <div class="admin-heading">
+        <h1>Admin Dashboard</h1>
+        <p>
+            Manage hostel rooms, students, allocations,
+            and vacate requests.
+        </p>
+    </div>
+
+    <div class="admin-grid">
+
+        <article class="admin-card">
+            <div class="admin-card-icon">🏠</div>
+            <h2>Room Management</h2>
+            <p>
+                View hostel rooms, monitor occupancy,
+                and manage room availability.
+            </p>
+            <span class="admin-coming-soon">
+                Coming Soon
+            </span>
+        </article>
+
+        <article class="admin-card">
+            <div class="admin-card-icon">🎓</div>
+            <h2>Student Management</h2>
+            <p>
+                View registered students and manage
+                student information.
+            </p>
+            <span class="admin-coming-soon">
+                Coming Soon
+            </span>
+        </article>
+
+        <article class="admin-card">
+            <div class="admin-card-icon">🛏️</div>
+            <h2>Room Allocations</h2>
+            <p>
+                Assign students to rooms and review
+                previous room allocation history.
+            </p>
+            <span class="admin-coming-soon">
+                Coming Soon
+            </span>
+        </article>
+
+        <article class="admin-card">
+            <div class="admin-card-icon">📋</div>
+            <h2>Vacate Requests</h2>
+            <p>
+                Review student vacate requests,
+                approve or reject requests.
+            </p>
+
+            <a href="/admin/vacate-requests" class="admin-card-link">
+                View Vacate Requests
+            </a>
+
+        </article>
+
+    </div>
+
+</main>
+
+<script>
+    const logoutButton = document.getElementById(
+        "adminLogoutButton"
+    );
+
+    logoutButton.addEventListener("click", async function () {
+        logoutButton.disabled = true;
+
+        try {
+            const response = await fetch("/api/admin-auth/logout", {
+                method: "POST"
+            });
+
+            if (!response.ok) {
+                throw new Error("Logout failed.");
+            }
+
+            window.location.href = "/admin/login";
+
+        } catch (error) {
+            alert("Unable to log out. Please try again.");
+            logoutButton.disabled = false;
+        }
+    });
+</script>
+
+</body>
+</html>

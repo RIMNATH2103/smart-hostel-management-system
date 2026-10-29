@@ -1,0 +1,300 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vacate Requests | Smart Hostel Admin</title>
+    <link rel="stylesheet" href="/css/style.css">
+
+    <style>
+        .admin-nav {
+            background: #493477;
+            padding: 20px 7%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .admin-nav h2 {
+            color: white;
+            margin: 0;
+        }
+
+        .back-link {
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .page-container {
+            max-width: 1100px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .page-container h1 {
+            color: #493477;
+            margin-bottom: 10px;
+        }
+
+        .page-description {
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .request-grid {
+            display: grid;
+            gap: 20px;
+        }
+
+        .request-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 25px rgba(40, 30, 70, 0.09);
+            overflow-wrap: anywhere;
+        }
+
+        .request-card h2 {
+            color: #493477;
+            margin-bottom: 15px;
+        }
+
+        .request-card p {
+            margin: 10px 0;
+            line-height: 1.5;
+        }
+
+        .request-status {
+            display: inline-block;
+            padding: 7px 12px;
+            border-radius: 20px;
+            background: #fff1d5;
+            color: #946000;
+            font-weight: 600;
+        }
+
+        .empty-message {
+            padding: 25px;
+            background: white;
+            border-radius: 12px;
+            color: #555;
+        }
+    </style>
+</head>
+
+<body>
+
+<nav class="admin-nav">
+    <h2>Smart Hostel | Admin</h2>
+    <a href="/admin/dashboard" class="back-link">
+        ← Back to Dashboard
+    </a>
+</nav>
+
+<main class="page-container">
+    <h1>Pending Vacate Requests</h1>
+    <p class="page-description">
+        Review requests submitted by students.
+        Approval and rejection controls will be added next.
+    </p>
+
+    <div id="requestList" class="request-grid">
+        <p class="empty-message">Loading requests...</p>
+    </div>
+</main>
+
+<script>
+    const requestList = document.getElementById("requestList");
+
+    function addDetail(card, label, value) {
+        const paragraph = document.createElement("p");
+        const strong = document.createElement("strong");
+
+        strong.textContent = label + ": ";
+        paragraph.appendChild(strong);
+        paragraph.appendChild(
+            document.createTextNode(value ?? "Not available")
+        );
+
+        card.appendChild(paragraph);
+    }
+
+    async function loadPendingRequests() {
+        try {
+            const response = await fetch(
+                "/api/vacate-requests/admin/pending"
+            );
+
+            if (response.status === 401) {
+                window.location.href = "/admin/login";
+                return;
+            }
+
+            if (!response.ok) {
+                throw new Error("Unable to load requests.");
+            }
+
+            const requests = await response.json();
+            requestList.replaceChildren();
+
+            if (requests.length === 0) {
+                const message = document.createElement("p");
+                message.className = "empty-message";
+                message.textContent =
+                    "There are no pending vacate requests.";
+                requestList.appendChild(message);
+                return;
+            }
+
+            requests.forEach(function (request) {
+                const card = document.createElement("article");
+                card.className = "request-card";
+
+                const heading = document.createElement("h2");
+                heading.textContent = request.studentName;
+                card.appendChild(heading);
+
+                addDetail(
+                    card,
+                    "Registration Number",
+                    request.studentRegistrationNumber
+                );
+
+                addDetail(card, "Room", request.roomNumber);
+                addDetail(card, "Reason", request.reason);
+                addDetail(card, "Requested At", request.requestedAt);
+
+                const status = document.createElement("span");
+                status.className = "request-status";
+
+                status.textContent = request.status;
+                card.appendChild(status);
+
+// Admin remarks
+                const remarksInput = document.createElement("textarea");
+                remarksInput.placeholder = "Administrator remarks (optional)";
+                remarksInput.maxLength = 1000;
+                remarksInput.rows = 3;
+                remarksInput.style.width = "100%";
+                remarksInput.style.boxSizing = "border-box";
+                remarksInput.style.marginTop = "18px";
+                remarksInput.style.padding = "12px";
+                remarksInput.style.borderRadius = "9px";
+                remarksInput.style.border = "1px solid #d5cfe3";
+
+                card.appendChild(remarksInput);
+
+// Button container
+                const actions = document.createElement("div");
+                actions.style.display = "flex";
+                actions.style.gap = "12px";
+                actions.style.marginTop = "15px";
+                actions.style.flexWrap = "wrap";
+
+// Approve button
+                const approveButton = document.createElement("button");
+                approveButton.textContent = "Approve";
+                approveButton.style.background = "#168b83";
+                approveButton.style.color = "white";
+                approveButton.style.padding = "11px 20px";
+                approveButton.style.border = "none";
+                approveButton.style.borderRadius = "9px";
+                approveButton.style.cursor = "pointer";
+
+// Reject button
+                const rejectButton = document.createElement("button");
+                rejectButton.textContent = "Reject";
+                rejectButton.style.background = "#b53e52";
+                rejectButton.style.color = "white";
+                rejectButton.style.padding = "11px 20px";
+                rejectButton.style.border = "none";
+                rejectButton.style.borderRadius = "9px";
+                rejectButton.style.cursor = "pointer";
+
+                async function reviewRequest(action) {
+
+                    const message = action === "approve"
+                        ? "Approve this request and vacate the student?"
+                        : "Reject this vacate request?";
+
+                    if (!confirm(message)) {
+                        return;
+                    }
+
+                    approveButton.disabled = true;
+                    rejectButton.disabled = true;
+
+                    try {
+                        const response = await fetch(
+                            `/api/vacate-requests/admin/${request.id}/${action}`,
+                            {
+                                method: "POST",
+                                headers: {
+                                    "Content-Type": "application/json"
+                                },
+                                body: JSON.stringify({
+                                    remarks: remarksInput.value.trim()
+                                })
+                            }
+                        );
+
+                        if (response.status === 401) {
+                            window.location.href = "/admin/login";
+                            return;
+                        }
+
+                        const result = await response.json();
+
+                        if (!response.ok) {
+                            throw new Error(
+                                result.message || "Unable to review request."
+                            );
+                        }
+
+                        alert(result.message);
+                        await loadPendingRequests();
+
+                    } catch (error) {
+                        alert(error.message);
+                        approveButton.disabled = false;
+                        rejectButton.disabled = false;
+                    }
+                }
+
+                approveButton.addEventListener("click", function () {
+                    reviewRequest("approve");
+                });
+
+                rejectButton.addEventListener("click", function () {
+                    reviewRequest("reject");
+                });
+
+                actions.appendChild(approveButton);
+                actions.appendChild(rejectButton);
+                card.appendChild(actions);
+
+                requestList.appendChild(card);
+
+            });
+
+        } catch (error) {
+            requestList.replaceChildren();
+
+            const message = document.createElement("p");
+            message.className = "empty-message";
+            message.textContent =
+                "Unable to load requests. Please try again.";
+
+            requestList.appendChild(message);
+        }
+    }
+
+    loadPendingRequests();
+</script>
+
+</body>
+</html>

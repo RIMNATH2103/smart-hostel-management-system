@@ -1,0 +1,290 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vacate Request | Smart Hostel</title>
+    <link rel="stylesheet" href="/css/style.css">
+
+    <style>
+        .vacate-container {
+            max-width: 850px;
+            margin: 45px auto;
+            padding: 0 20px;
+        }
+
+        .vacate-header {
+            margin-bottom: 28px;
+        }
+
+        .vacate-header h1 {
+            color: #43306f;
+            margin-bottom: 10px;
+        }
+
+        .vacate-card {
+            background: white;
+            border-radius: 18px;
+            padding: 28px;
+            margin-bottom: 25px;
+            box-shadow: 0 8px 25px rgba(40, 30, 70, 0.09);
+        }
+
+        .vacate-card h2 {
+            color: #43306f;
+            margin-bottom: 16px;
+        }
+
+        .vacate-card textarea {
+            width: 100%;
+            min-height: 140px;
+            padding: 14px;
+            border: 1px solid #cfc9df;
+            border-radius: 10px;
+            font: inherit;
+            resize: vertical;
+            box-sizing: border-box;
+        }
+
+        .vacate-submit {
+            margin-top: 15px;
+            background: #168b83;
+            color: white;
+            border: none;
+            padding: 12px 22px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .vacate-submit:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .vacate-message {
+            margin-top: 15px;
+        }
+
+        .request-item {
+            padding: 18px;
+            border: 1px solid #e4e0ed;
+            border-radius: 12px;
+            margin-top: 14px;
+        }
+
+        .request-item p {
+            margin: 8px 0;
+            overflow-wrap: anywhere;
+        }
+
+        .request-status {
+            font-weight: bold;
+        }
+
+        .status-pending {
+            color: #a56c00;
+        }
+
+        .status-approved {
+            color: #168b83;
+        }
+
+        .status-rejected {
+            color: #b53e52;
+        }
+
+        .vacate-back {
+            display: inline-block;
+            margin-bottom: 22px;
+            color: #43306f;
+            font-weight: 600;
+            text-decoration: none;
+        }
+    </style>
+</head>
+
+<body>
+
+<main class="vacate-container">
+
+    <a href="/student/dashboard" class="vacate-back">
+        ← Back to Dashboard
+    </a>
+
+    <div class="vacate-header">
+        <h1>Room Vacate Request</h1>
+        <p>
+            Submit a request to vacate your room.
+            Your room will remain assigned until an admin
+            reviews and processes your request.
+        </p>
+    </div>
+
+    <section class="vacate-card">
+        <h2>Submit New Request</h2>
+
+        <form id="vacateForm">
+            <label for="vacateReason">
+                Reason for vacating
+            </label>
+
+            <textarea
+                    id="vacateReason"
+                    maxlength="1000"
+                    placeholder="Explain why you want to vacate your room..."
+                    required></textarea>
+
+            <button
+                    type="submit"
+                    class="vacate-submit"
+                    id="submitVacateButton">
+                Submit Request
+            </button>
+        </form>
+
+        <p id="vacateMessage"
+           class="vacate-message"
+           role="status"></p>
+    </section>
+
+    <section class="vacate-card">
+        <h2>My Request History</h2>
+
+        <div id="requestHistory">
+            Loading requests...
+        </div>
+    </section>
+
+</main>
+
+<script>
+    const vacateForm = document.getElementById("vacateForm");
+    const vacateReason = document.getElementById("vacateReason");
+    const vacateMessage = document.getElementById("vacateMessage");
+    const requestHistory = document.getElementById("requestHistory");
+    const submitButton = document.getElementById("submitVacateButton");
+
+    async function loadRequestHistory() {
+        try {
+            const response = await fetch("/api/vacate-requests/my");
+
+            if (response.status === 401) {
+                window.location.href = "/student/login";
+                return;
+            }
+
+            if (!response.ok) {
+                throw new Error("Unable to load request history.");
+            }
+
+            const requests = await response.json();
+
+            requestHistory.replaceChildren();
+
+            if (requests.length === 0) {
+                requestHistory.textContent =
+                    "You have not submitted any vacate requests yet.";
+                return;
+            }
+
+            for (const request of requests) {
+                const item = document.createElement("div");
+                item.className = "request-item";
+
+                const status = document.createElement("p");
+                status.className = "request-status";
+
+                const allowedStatuses = [
+                    "PENDING", "APPROVED", "REJECTED"
+                ];
+
+                const statusValue =
+                    allowedStatuses.includes(request.status)
+                        ? request.status
+                        : "UNKNOWN";
+
+                status.classList.add(
+                    "status-" + statusValue.toLowerCase()
+                );
+
+                status.textContent = "Status: " + statusValue;
+
+                const reason = document.createElement("p");
+                reason.textContent = "Reason: " + request.reason;
+
+                const date = document.createElement("p");
+                date.textContent = "Submitted: " +
+                    (request.requestedAt
+                        ? new Date(request.requestedAt).toLocaleString()
+                        : "Not available");
+
+                item.append(status, reason, date);
+
+                if (request.adminRemarks) {
+                    const remarks = document.createElement("p");
+                    remarks.textContent =
+                        "Admin Remarks: " + request.adminRemarks;
+                    item.appendChild(remarks);
+                }
+
+                requestHistory.appendChild(item);
+            }
+
+        } catch (error) {
+            requestHistory.textContent = error.message;
+        }
+    }
+
+    vacateForm.addEventListener("submit", async function (event) {
+        event.preventDefault();
+
+        const reason = vacateReason.value.trim();
+
+        if (!reason) {
+            vacateMessage.textContent =
+                "Please enter a reason for vacating.";
+            return;
+        }
+
+        submitButton.disabled = true;
+        vacateMessage.textContent = "Submitting request...";
+
+        try {
+            const response = await fetch("/api/vacate-requests/my", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ reason: reason })
+            });
+
+            if (response.status === 401) {
+                window.location.href = "/student/login";
+                return;
+            }
+
+            const result = await response.json();
+
+            vacateMessage.textContent =
+                result.message || "Unable to submit request.";
+
+            if (response.ok) {
+                vacateForm.reset();
+                await loadRequestHistory();
+            }
+
+        } catch (error) {
+            vacateMessage.textContent =
+                "Something went wrong. Please try again.";
+        } finally {
+            submitButton.disabled = false;
+        }
+    });
+
+    loadRequestHistory();
+</script>
+
+</body>
+</html>
