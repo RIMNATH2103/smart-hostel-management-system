@@ -38,7 +38,7 @@ public class HomeController {
     @GetMapping("/student/login")
     public String showStudentLoginPage(HttpSession session) {
 
-        if (session.getAttribute("studentId") != null) {
+        if (session.getAttribute("studentId") instanceof Long) {
             return "redirect:/student/dashboard";
         }
 
@@ -92,7 +92,7 @@ public class HomeController {
                     roomAllocationService.getOccupiedSlots(roomId)
             );
 
-            // Retrieve other students currently sharing this room
+            // Retrieve other students sharing the room
             List<RoommateInfo> roommates =
                     roomAllocationService.getActiveAllocations(roomId)
                             .stream()
@@ -116,18 +116,17 @@ public class HomeController {
         return "student-dashboard";
     }
 
-    // Only expose the details needed for the roommates list
+    // Information displayed in the student's roommates list
     public record RoommateInfo(
             String fullName,
             String studentId
     ) {
     }
 
-    // Display the roommate preferences page
+    // Display roommate preferences page
     @GetMapping("/student/roommates")
     public String showRoommatePreferencesPage(HttpSession session) {
 
-        // Only logged-in students can access this page
         Object studentId = session.getAttribute("studentId");
 
         if (!(studentId instanceof Long)) {
@@ -137,6 +136,7 @@ public class HomeController {
         return "student-roommates";
     }
 
+    // Display student vacate request page
     @GetMapping("/student/vacate-request")
     public String showVacateRequestPage(HttpSession session) {
 
@@ -149,6 +149,7 @@ public class HomeController {
         return "student-vacate-request";
     }
 
+    // Display admin login page
     @GetMapping("/admin/login")
     public String showAdminLoginPage(HttpSession session) {
 
@@ -161,31 +162,66 @@ public class HomeController {
         return "admin-login";
     }
 
+    // Display admin dashboard
     @GetMapping("/admin/dashboard")
     public String showAdminDashboard(HttpSession session, Model model) {
 
         Object adminId = session.getAttribute("adminId");
 
-        // Only logged-in administrators can access this page
         if (!(adminId instanceof Long)) {
             return "redirect:/admin/login";
         }
 
-        // Verify that the administrator still exists
         return "admin-dashboard";
     }
 
+    // Display admin vacate requests page
     @GetMapping("/admin/vacate-requests")
     public String showAdminVacateRequestsPage(HttpSession session) {
 
         Object adminId = session.getAttribute("adminId");
 
-        // Only logged-in administrators can open this page
         if (!(adminId instanceof Long)) {
             return "redirect:/admin/login";
         }
 
         return "admin-vacate-requests";
+    }
+
+    // Display the Room Management page for administrators
+    @GetMapping("/admin/rooms")
+    public String showAdminRoomsPage(HttpSession session) {
+
+        if (!(session.getAttribute("adminId") instanceof Long)) {
+            return "redirect:/admin/login";
+        }
+
+        return "admin-rooms";
+    }
+
+
+    // Display current allocations and previous room history
+    @GetMapping("/admin/allocations")
+    public String showAdminAllocationsPage(HttpSession session) {
+
+        Object adminId = session.getAttribute("adminId");
+
+        if (!(adminId instanceof Long)) {
+            return "redirect:/admin/login";
+        }
+
+        return "admin-allocations";
+    }
+
+    // Display the Student Management page for administrators
+    @GetMapping("/admin/students")
+    public String showAdminStudentsPage(HttpSession session) {
+
+        if (!(session.getAttribute("adminId") instanceof Long)) {
+            return "redirect:/admin/login";
+        }
+
+        return "admin-students";
     }
 
 }

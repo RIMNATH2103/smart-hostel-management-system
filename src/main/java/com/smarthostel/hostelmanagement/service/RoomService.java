@@ -3,6 +3,7 @@ package com.smarthostel.hostelmanagement.service;
 
 import com.smarthostel.hostelmanagement.entity.Room;
 import com.smarthostel.hostelmanagement.repository.RoomRepository;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -36,14 +37,35 @@ public class RoomService {
             );
         }
 
-        if (room.getRoomNumber() == null
-                || room.getRoomNumber().isBlank()) {
+        String roomNumber = room.getRoomNumber();
+
+        if (roomNumber == null || roomNumber.isBlank()) {
             throw new IllegalArgumentException(
                     "Room number is required."
             );
         }
 
-        return roomRepository.save(room);
+        // Remove unnecessary spaces
+        roomNumber = roomNumber.trim();
+
+        // Prevent duplicate room numbers
+        if (roomRepository.existsByRoomNumberIgnoreCase(roomNumber)) {
+            throw new IllegalArgumentException(
+                    "A room with this number already exists."
+            );
+        }
+
+        // Save the cleaned room number
+        room.setRoomNumber(roomNumber);
+
+        try {
+            return roomRepository.saveAndFlush(room);
+        } catch (DataIntegrityViolationException exception) {
+            throw new IllegalArgumentException(
+                    "Unable to create room. The room number may already exist.",
+                    exception
+            );
+        }
     }
 
     // Get the maximum capacity of a room

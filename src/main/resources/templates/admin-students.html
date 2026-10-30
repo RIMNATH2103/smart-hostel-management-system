@@ -1,0 +1,361 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Management | Smart Hostel</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f5f3fa;
+            color: #333;
+        }
+
+        .navbar {
+            background: #493477;
+            padding: 20px 7%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .navbar h2 {
+            margin: 0;
+            color: white;
+        }
+
+        .back-button {
+            background: white;
+            color: #493477;
+            padding: 11px 18px;
+            border-radius: 9px;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .container {
+            max-width: 1150px;
+            margin: 35px auto;
+            padding: 0 20px;
+        }
+
+        h1 {
+            color: #493477;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 28px;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 18px;
+            margin-bottom: 28px;
+        }
+
+        .summary-card {
+            background: white;
+            padding: 23px;
+            border-radius: 14px;
+            box-shadow: 0 5px 18px rgba(50, 30, 80, 0.08);
+        }
+
+        .summary-card p {
+            margin: 0 0 10px;
+            color: #666;
+        }
+
+        .summary-card strong {
+            font-size: 30px;
+            color: #493477;
+        }
+
+        .panel {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 18px rgba(50, 30, 80, 0.08);
+        }
+
+        .panel h2 {
+            margin-top: 0;
+            color: #493477;
+        }
+
+        .search-input {
+            width: 100%;
+            max-width: 450px;
+            padding: 13px;
+            border: 1px solid #ccc;
+            border-radius: 9px;
+            font-size: 15px;
+            margin-bottom: 20px;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th, td {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        th {
+            background: #f1ecf8;
+            color: #493477;
+        }
+
+        td {
+            color: #444;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 7px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        .allocated {
+            color: #167a54;
+            background: #def5eb;
+        }
+
+        .waiting {
+            color: #a45425;
+            background: #fff0df;
+        }
+
+        .empty-message {
+            color: #777;
+            text-align: center;
+        }
+
+        .error-message {
+            color: #bd3434;
+            padding: 15px 0;
+        }
+
+        @media (max-width: 600px) {
+            .panel {
+                padding: 16px;
+            }
+
+            th, td {
+                padding: 11px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<nav class="navbar">
+    <h2>Smart Hostel | Admin</h2>
+    <a href="/admin/dashboard" class="back-button">
+        Back to Dashboard
+    </a>
+</nav>
+
+<main class="container">
+
+    <h1>Student Management</h1>
+    <p class="subtitle">
+        View registered students and their current room allocation status.
+    </p>
+
+    <div class="summary-grid">
+        <div class="summary-card">
+            <p>Total Students</p>
+            <strong id="totalStudents">0</strong>
+        </div>
+
+        <div class="summary-card">
+            <p>Allocated Students</p>
+            <strong id="allocatedStudents">0</strong>
+        </div>
+
+        <div class="summary-card">
+            <p>Waiting Students</p>
+            <strong id="waitingStudents">0</strong>
+        </div>
+    </div>
+
+    <section class="panel">
+        <h2>Registered Students</h2>
+
+        <input
+                type="search"
+                id="searchInput"
+                class="search-input"
+                placeholder="Search by student name or registration number"
+                aria-label="Search students"
+        >
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                <tr>
+                    <th>Registration Number</th>
+                    <th>Student Name</th>
+                    <th>Room Number</th>
+                    <th>Allocation Status</th>
+                </tr>
+                </thead>
+
+                <tbody id="studentTableBody">
+                <tr>
+                    <td colspan="4" class="empty-message">
+                        Loading students...
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+</main>
+
+<script>
+    const studentTableBody =
+        document.getElementById("studentTableBody");
+
+    const searchInput =
+        document.getElementById("searchInput");
+
+    let allStudents = [];
+
+    function showTableMessage(message, isError = false) {
+        studentTableBody.replaceChildren();
+
+        const row = document.createElement("tr");
+        const cell = document.createElement("td");
+
+        cell.colSpan = 4;
+        cell.textContent = message;
+        cell.className = isError
+            ? "error-message"
+            : "empty-message";
+
+        row.appendChild(cell);
+        studentTableBody.appendChild(row);
+    }
+
+    function addCell(row, value) {
+        const cell = document.createElement("td");
+        cell.textContent = value ?? "-";
+        row.appendChild(cell);
+    }
+
+    function displayStudents(students) {
+        studentTableBody.replaceChildren();
+
+        if (students.length === 0) {
+            showTableMessage("No matching students found.");
+            return;
+        }
+
+        for (const student of students) {
+            const row = document.createElement("tr");
+
+            addCell(row, student.studentId);
+            addCell(row, student.fullName);
+            addCell(row, student.roomNumber);
+
+            const statusCell = document.createElement("td");
+            const badge = document.createElement("span");
+
+            const isAllocated =
+                student.allocationStatus === "Allocated";
+
+            badge.className = isAllocated
+                ? "badge allocated"
+                : "badge waiting";
+
+            badge.textContent = student.allocationStatus;
+
+            statusCell.appendChild(badge);
+            row.appendChild(statusCell);
+
+            studentTableBody.appendChild(row);
+        }
+    }
+
+    async function loadStudents() {
+        try {
+            const response = await fetch("/api/admin/students", {
+                credentials: "same-origin"
+            });
+
+            if (response.status === 401) {
+                window.location.href = "/admin/login";
+                return;
+            }
+
+            if (!response.ok) {
+                throw new Error("Unable to load student records.");
+            }
+
+            allStudents = await response.json();
+
+            const allocatedCount = allStudents.filter(
+                student => student.allocationStatus === "Allocated"
+            ).length;
+
+            document.getElementById("totalStudents").textContent =
+                allStudents.length;
+
+            document.getElementById("allocatedStudents").textContent =
+                allocatedCount;
+
+            document.getElementById("waitingStudents").textContent =
+                allStudents.length - allocatedCount;
+
+            displayStudents(allStudents);
+
+        } catch (error) {
+            showTableMessage(error.message, true);
+        }
+    }
+
+    searchInput.addEventListener("input", function() {
+        const keyword = searchInput.value.trim().toLowerCase();
+
+        const filteredStudents = allStudents.filter(student => {
+            const name = (student.fullName || "").toLowerCase();
+            const registration =
+                (student.studentId || "").toLowerCase();
+
+            return name.includes(keyword)
+                || registration.includes(keyword);
+        });
+
+        displayStudents(filteredStudents);
+    });
+
+    loadStudents();
+</script>
+
+</body>
+</html>

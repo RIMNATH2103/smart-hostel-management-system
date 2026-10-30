@@ -1,0 +1,370 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Room Allocations | Smart Hostel</title>
+    <link rel="stylesheet" href="/css/style.css">
+
+    <style>
+        .admin-nav {
+            background: #493477;
+            padding: 20px 7%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .admin-nav h2 {
+            color: white;
+            margin: 0;
+        }
+
+        .back-link {
+            background: white;
+            color: #493477;
+            padding: 10px 18px;
+            border-radius: 9px;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .page-container {
+            max-width: 1150px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .page-heading h1 {
+            color: #493477;
+            margin-bottom: 10px;
+        }
+
+        .page-heading p {
+            color: #666;
+            margin-bottom: 25px;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+
+        .summary-card {
+            background: white;
+            padding: 22px;
+            border-radius: 14px;
+            box-shadow: 0 5px 18px rgba(40, 30, 70, 0.08);
+        }
+
+        .summary-card h3 {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .summary-card strong {
+            color: #493477;
+            font-size: 29px;
+        }
+
+        .section-card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 25px;
+            box-shadow: 0 5px 20px rgba(40, 30, 70, 0.08);
+        }
+
+        .section-card h2 {
+            color: #493477;
+            margin-bottom: 18px;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th, td {
+            padding: 14px;
+            border-bottom: 1px solid #eee;
+        }
+
+        th {
+            background: #f1ecf8;
+            color: #493477;
+        }
+
+        td {
+            color: #444;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 6px 11px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .active {
+            background: #def5ed;
+            color: #157b58;
+        }
+
+        .vacated {
+            background: #fce9df;
+            color: #a55a28;
+        }
+
+        .empty-message {
+            color: #777;
+            padding: 15px 0;
+        }
+
+        .error-message {
+            color: #a12626;
+            background: #fde9e9;
+            padding: 14px;
+            border-radius: 9px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .refresh-button {
+            background: #168b83;
+            color: white;
+            border: none;
+            border-radius: 9px;
+            padding: 11px 18px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+<nav class="admin-nav">
+    <h2>Smart Hostel | Admin</h2>
+    <a href="/admin/dashboard" class="back-link">
+        Back to Dashboard
+    </a>
+</nav>
+
+<main class="page-container">
+
+    <div class="page-heading">
+        <h1>Room Allocation History</h1>
+        <p>
+            View current room members and previous room allocations.
+        </p>
+    </div>
+
+    <div class="summary-grid">
+        <div class="summary-card">
+            <h3>Active Allocations</h3>
+            <strong id="activeCount">0</strong>
+        </div>
+
+        <div class="summary-card">
+            <h3>Previous Allocations</h3>
+            <strong id="historyCount">0</strong>
+        </div>
+    </div>
+
+    <button class="refresh-button" id="refreshButton">
+        Refresh Allocations
+    </button>
+
+    <div class="error-message" id="errorMessage"></div>
+
+    <section class="section-card">
+        <h2>Current Room Members</h2>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                <tr>
+                    <th>Room</th>
+                    <th>Student ID</th>
+                    <th>Student Name</th>
+                    <th>Allocated Date</th>
+                    <th>Status</th>
+                </tr>
+                </thead>
+                <tbody id="activeTableBody"></tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="section-card">
+        <h2>Previous Room Members</h2>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                <tr>
+                    <th>Room</th>
+                    <th>Student ID</th>
+                    <th>Student Name</th>
+                    <th>Allocated Date</th>
+                    <th>Vacated Date</th>
+                    <th>Status</th>
+                </tr>
+                </thead>
+                <tbody id="historyTableBody"></tbody>
+            </table>
+        </div>
+    </section>
+
+</main>
+
+<script>
+    const activeTableBody = document.getElementById("activeTableBody");
+    const historyTableBody = document.getElementById("historyTableBody");
+    const errorMessage = document.getElementById("errorMessage");
+
+    function formatDate(value) {
+        if (!value) {
+            return "-";
+        }
+
+        const date = new Date(value);
+
+        return isNaN(date.getTime())
+            ? "-"
+            : date.toLocaleString();
+    }
+
+    function addCell(row, value) {
+        const cell = document.createElement("td");
+        cell.textContent = value ?? "-";
+        row.appendChild(cell);
+    }
+
+    function addStatusCell(row, statusText, className) {
+        const cell = document.createElement("td");
+        const badge = document.createElement("span");
+
+        badge.className = "status " + className;
+        badge.textContent = statusText;
+
+        cell.appendChild(badge);
+        row.appendChild(cell);
+    }
+
+    function showEmptyRow(tableBody, columnCount, message) {
+        const row = document.createElement("tr");
+        const cell = document.createElement("td");
+
+        cell.colSpan = columnCount;
+        cell.className = "empty-message";
+        cell.textContent = message;
+
+        row.appendChild(cell);
+        tableBody.appendChild(row);
+    }
+
+    async function loadAllocations() {
+        errorMessage.style.display = "none";
+        activeTableBody.innerHTML = "";
+        historyTableBody.innerHTML = "";
+
+        try {
+            const response = await fetch("/api/allocations", {
+                credentials: "same-origin"
+            });
+
+            if (response.status === 401 || response.status === 403) {
+                window.location.href = "/admin/login";
+                return;
+            }
+
+            if (!response.ok) {
+                throw new Error("Unable to load room allocations.");
+            }
+
+            const allocations = await response.json();
+
+            const active = allocations.filter(
+                allocation => allocation.vacatedAt === null
+            );
+
+            const history = allocations.filter(
+                allocation => allocation.vacatedAt !== null
+            );
+
+            document.getElementById("activeCount").textContent =
+                active.length;
+
+            document.getElementById("historyCount").textContent =
+                history.length;
+
+            for (const allocation of active) {
+                const row = document.createElement("tr");
+
+                addCell(row, allocation.room?.roomNumber);
+                addCell(row, allocation.student?.studentId);
+                addCell(row, allocation.student?.fullName);
+                addCell(row, formatDate(allocation.allocatedAt));
+                addStatusCell(row, "Active", "active");
+
+                activeTableBody.appendChild(row);
+            }
+
+            for (const allocation of history) {
+                const row = document.createElement("tr");
+
+                addCell(row, allocation.room?.roomNumber);
+                addCell(row, allocation.student?.studentId);
+                addCell(row, allocation.student?.fullName);
+                addCell(row, formatDate(allocation.allocatedAt));
+                addCell(row, formatDate(allocation.vacatedAt));
+                addStatusCell(row, "Vacated", "vacated");
+
+                historyTableBody.appendChild(row);
+            }
+
+            if (active.length === 0) {
+                showEmptyRow(
+                    activeTableBody,
+                    5,
+                    "No active room allocations found."
+                );
+            }
+
+            if (history.length === 0) {
+                showEmptyRow(
+                    historyTableBody,
+                    6,
+                    "No previous room allocations found."
+                );
+            }
+
+        } catch (error) {
+            errorMessage.textContent = error.message;
+            errorMessage.style.display = "block";
+        }
+    }
+
+    document.getElementById("refreshButton")
+        .addEventListener("click", loadAllocations);
+
+    loadAllocations();
+</script>
+
+</body>
+</html>

@@ -24,7 +24,7 @@
         }
 
         .admin-logout {
-            background: #ffffff;
+            background: white;
             color: #493477;
             border: none;
             padding: 10px 20px;
@@ -54,10 +54,7 @@
 
         .admin-grid {
             display: grid;
-            grid-template-columns: repeat(
-                auto-fit,
-                minmax(240px, 1fr)
-            );
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
             gap: 22px;
         }
 
@@ -85,19 +82,52 @@
             margin-bottom: 20px;
         }
 
-        .admin-card-link {
+        .admin-card-link,
+        .admin-action-button {
             display: inline-block;
             padding: 11px 17px;
             background: #168b83;
             color: white;
             text-decoration: none;
+            border: none;
             border-radius: 9px;
             font-weight: 600;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .admin-action-button:hover,
+        .admin-card-link:hover {
+            background: #116e68;
+        }
+
+        .admin-action-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
         }
 
         .admin-coming-soon {
             color: #777;
             font-weight: 600;
+        }
+
+        .allocation-message {
+            display: none;
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 9px;
+            line-height: 1.5;
+            font-weight: 500;
+        }
+
+        .allocation-success {
+            background: #e4f7ef;
+            color: #176d4c;
+        }
+
+        .allocation-error {
+            background: #fde9e9;
+            color: #a12626;
         }
     </style>
 </head>
@@ -131,9 +161,12 @@
                 View hostel rooms, monitor occupancy,
                 and manage room availability.
             </p>
-            <span class="admin-coming-soon">
-                Coming Soon
-            </span>
+
+            <a href="/admin/rooms"
+               class="admin-card-link">
+                Manage Rooms
+            </a>
+
         </article>
 
         <article class="admin-card">
@@ -143,21 +176,42 @@
                 View registered students and manage
                 student information.
             </p>
-            <span class="admin-coming-soon">
-                Coming Soon
-            </span>
+
+            <a href="/admin/students"
+               class="admin-card-link">
+                Manage Students
+            </a>
+
         </article>
 
         <article class="admin-card">
             <div class="admin-card-icon">🛏️</div>
             <h2>Room Allocations</h2>
             <p>
-                Assign students to rooms and review
-                previous room allocation history.
+                Automatically assign unallocated students
+                to available rooms while prioritizing
+                their roommate preferences.
             </p>
-            <span class="admin-coming-soon">
-                Coming Soon
-            </span>
+
+            <button
+                    class="admin-action-button"
+                    id="autoAllocateButton"
+                    type="button">
+                Auto Allocate Students
+            </button>
+
+            <a href="/admin/allocations"
+               class="admin-card-link"
+               style="margin-top: 12px;">
+                View Room Allocations
+            </a>
+
+            <div
+                    id="allocationMessage"
+                    class="allocation-message"
+                    role="status"
+                    aria-live="polite">
+            </div>
         </article>
 
         <article class="admin-card">
@@ -168,10 +222,11 @@
                 approve or reject requests.
             </p>
 
-            <a href="/admin/vacate-requests" class="admin-card-link">
+            <a
+                    href="/admin/vacate-requests"
+                    class="admin-card-link">
                 View Vacate Requests
             </a>
-
         </article>
 
     </div>
@@ -183,13 +238,103 @@
         "adminLogoutButton"
     );
 
+    const autoAllocateButton = document.getElementById(
+        "autoAllocateButton"
+    );
+
+    const allocationMessage = document.getElementById(
+        "allocationMessage"
+    );
+
+    // Show allocation feedback to the administrator
+    function showAllocationMessage(message, isSuccess) {
+        allocationMessage.textContent = message;
+        allocationMessage.className = isSuccess
+            ? "allocation-message allocation-success"
+            : "allocation-message allocation-error";
+
+        allocationMessage.style.display = "block";
+    }
+
+    // Start allocation only after admin confirmation
+    autoAllocateButton.addEventListener("click", async function () {
+
+        const confirmed = confirm(
+            "Allocate all currently unallocated students " +
+            "to available hostel rooms?\n\n" +
+            "Existing active allocations will remain unchanged."
+        );
+
+        if (!confirmed) {
+            return;
+        }
+
+        autoAllocateButton.disabled = true;
+        autoAllocateButton.textContent = "Allocating...";
+        allocationMessage.style.display = "none";
+
+        try {
+            const response = await fetch(
+                "/api/allocations/admin/auto-allocate",
+                {
+                    method: "POST",
+                    credentials: "same-origin"
+                }
+            );
+
+            const result = await response.json();
+
+            if (response.status === 401) {
+                showAllocationMessage(
+                    "Admin session expired. Please log in again.",
+                    false
+                );
+                return;
+            }
+
+            if (!response.ok) {
+                throw new Error(
+                    result.message || "Automatic allocation failed."
+                );
+            }
+
+            if (result.allocatedCount === 0) {
+                showAllocationMessage(
+                    "No students were allocated. All rooms may be full " +
+                    "or all students may already have rooms.",
+                    true
+                );
+            } else {
+                showAllocationMessage(
+                    "Automatic allocation completed successfully! " +
+                    result.allocatedCount +
+                    " student(s) allocated.",
+                    true
+                );
+            }
+
+        } catch (error) {
+            showAllocationMessage(error.message, false);
+
+        } finally {
+            autoAllocateButton.disabled = false;
+            autoAllocateButton.textContent = "Auto Allocate Students";
+        }
+    });
+
+    // Admin logout
     logoutButton.addEventListener("click", async function () {
+
         logoutButton.disabled = true;
 
         try {
-            const response = await fetch("/api/admin-auth/logout", {
-                method: "POST"
-            });
+            const response = await fetch(
+                "/api/admin-auth/logout",
+                {
+                    method: "POST",
+                    credentials: "same-origin"
+                }
+            );
 
             if (!response.ok) {
                 throw new Error("Logout failed.");

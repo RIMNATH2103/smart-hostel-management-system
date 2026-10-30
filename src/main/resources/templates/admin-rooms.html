@@ -1,0 +1,452 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Room Management | Smart Hostel</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f5f3fa;
+            color: #333;
+        }
+
+        .navbar {
+            background: #493477;
+            padding: 20px 7%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .navbar h2 {
+            margin: 0;
+            color: white;
+        }
+
+        .back-button {
+            color: #493477;
+            background: white;
+            padding: 11px 18px;
+            border-radius: 9px;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .container {
+            max-width: 1150px;
+            margin: 35px auto;
+            padding: 0 20px;
+        }
+
+        h1 {
+            color: #493477;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 28px;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 18px;
+            margin-bottom: 30px;
+        }
+
+        .summary-card {
+            background: white;
+            border-radius: 14px;
+            padding: 23px;
+            box-shadow: 0 5px 18px rgba(50, 30, 80, 0.08);
+        }
+
+        .summary-card p {
+            margin: 0 0 10px;
+            color: #666;
+        }
+
+        .summary-card strong {
+            font-size: 30px;
+            color: #493477;
+        }
+
+        .panel {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            box-shadow: 0 5px 18px rgba(50, 30, 80, 0.08);
+        }
+
+        .panel h2 {
+            color: #493477;
+            margin-top: 0;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        input {
+            flex: 1;
+            min-width: 200px;
+            padding: 13px;
+            border: 1px solid #ccc;
+            border-radius: 9px;
+            font-size: 15px;
+        }
+
+        button {
+            background: #168b83;
+            color: white;
+            border: none;
+            border-radius: 9px;
+            padding: 13px 22px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #116f69;
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .message {
+            margin-top: 14px;
+            font-weight: bold;
+            min-height: 20px;
+        }
+
+        .success {
+            color: #167a54;
+        }
+
+        .error {
+            color: #bd3434;
+        }
+
+        .room-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 18px;
+        }
+
+        .room-card {
+            border: 1px solid #e9e3f0;
+            border-radius: 13px;
+            padding: 20px;
+            background: #fcfbff;
+        }
+
+        .room-card h3 {
+            color: #493477;
+            margin-top: 0;
+        }
+
+        .room-card p {
+            color: #666;
+        }
+
+        .occupancy {
+            font-size: 25px;
+            font-weight: bold;
+            color: #168b83;
+        }
+
+        .progress-track {
+            height: 9px;
+            background: #e9e4f0;
+            border-radius: 20px;
+            overflow: hidden;
+            margin: 15px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #168b83;
+            transition: width 0.2s;
+        }
+
+        .progress-fill.full {
+            background: #e07945;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 7px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        .available {
+            color: #167a54;
+            background: #def5eb;
+        }
+
+        .full-status {
+            color: #a45425;
+            background: #fff0df;
+        }
+
+        .empty-state {
+            color: #777;
+        }
+    </style>
+</head>
+
+<body>
+
+<nav class="navbar">
+    <h2>Smart Hostel | Admin</h2>
+    <a href="/admin/dashboard" class="back-button">
+        Back to Dashboard
+    </a>
+</nav>
+
+<main class="container">
+    <h1>Room Management</h1>
+    <p class="subtitle">
+        Add hostel rooms and monitor available spaces.
+    </p>
+
+    <div class="summary-grid">
+        <div class="summary-card">
+            <p>Total Rooms</p>
+            <strong id="totalRooms">0</strong>
+        </div>
+
+        <div class="summary-card">
+            <p>Occupied Spaces</p>
+            <strong id="occupiedSpaces">0</strong>
+        </div>
+
+        <div class="summary-card">
+            <p>Available Spaces</p>
+            <strong id="availableSpaces">0</strong>
+        </div>
+    </div>
+
+    <section class="panel">
+        <h2>Add New Room</h2>
+        <p>Each room can accommodate a maximum of four students.</p>
+
+        <form id="addRoomForm">
+            <div class="form-row">
+                <input
+                        type="text"
+                        id="roomNumber"
+                        placeholder="Example: R-101"
+                        maxlength="30"
+                        required
+                >
+
+                <button type="submit" id="addRoomButton">
+                    Add Room
+                </button>
+            </div>
+        </form>
+
+        <div id="formMessage" class="message" role="status"></div>
+    </section>
+
+    <section class="panel">
+        <h2>Hostel Rooms</h2>
+        <div id="roomGrid" class="room-grid">
+            <p class="empty-state">Loading rooms...</p>
+        </div>
+    </section>
+</main>
+
+<script>
+    const roomGrid = document.getElementById("roomGrid");
+    const form = document.getElementById("addRoomForm");
+    const formMessage = document.getElementById("formMessage");
+    const addRoomButton = document.getElementById("addRoomButton");
+
+    function showMessage(message, isError = false) {
+        formMessage.textContent = message;
+        formMessage.className = isError
+            ? "message error"
+            : "message success";
+    }
+
+    async function loadRooms() {
+        try {
+            const response = await fetch("/api/admin/rooms", {
+                credentials: "same-origin"
+            });
+
+            if (response.status === 401) {
+                window.location.href = "/admin/login";
+                return;
+            }
+
+            if (!response.ok) {
+                throw new Error("Unable to load rooms.");
+            }
+
+            const rooms = await response.json();
+
+            document.getElementById("totalRooms").textContent =
+                rooms.length;
+
+            document.getElementById("occupiedSpaces").textContent =
+                rooms.reduce((total, room) => total + room.occupied, 0);
+
+            document.getElementById("availableSpaces").textContent =
+                rooms.reduce((total, room) => total + room.available, 0);
+
+            roomGrid.replaceChildren();
+
+            if (rooms.length === 0) {
+                const empty = document.createElement("p");
+                empty.className = "empty-state";
+                empty.textContent = "No rooms have been added yet.";
+                roomGrid.appendChild(empty);
+                return;
+            }
+
+            for (const room of rooms) {
+                const card = document.createElement("div");
+                card.className = "room-card";
+
+                const heading = document.createElement("h3");
+                heading.textContent = room.roomNumber;
+
+                const occupancyLabel = document.createElement("p");
+                occupancyLabel.textContent = "Current Occupancy";
+
+                const occupancy = document.createElement("div");
+                occupancy.className = "occupancy";
+                occupancy.textContent =
+                    room.occupied + " / " + room.capacity;
+
+                const progressTrack = document.createElement("div");
+                progressTrack.className = "progress-track";
+
+                const progressFill = document.createElement("div");
+                progressFill.className = "progress-fill";
+
+                const percentage = room.capacity > 0
+                    ? (room.occupied / room.capacity) * 100
+                    : 0;
+
+                progressFill.style.width =
+                    Math.min(100, percentage) + "%";
+
+                if (room.available === 0) {
+                    progressFill.classList.add("full");
+                }
+
+                progressTrack.appendChild(progressFill);
+
+                const spaces = document.createElement("p");
+                spaces.textContent =
+                    room.available + " space(s) available";
+
+                const status = document.createElement("span");
+                status.className = room.available === 0
+                    ? "badge full-status"
+                    : "badge available";
+
+                status.textContent = room.status;
+
+                card.append(
+                    heading,
+                    occupancyLabel,
+                    occupancy,
+                    progressTrack,
+                    spaces,
+                    status
+                );
+
+                roomGrid.appendChild(card);
+            }
+
+        } catch (error) {
+            roomGrid.replaceChildren();
+
+            const message = document.createElement("p");
+            message.className = "error";
+            message.textContent = error.message;
+
+            roomGrid.appendChild(message);
+        }
+    }
+
+    form.addEventListener("submit", async function(event) {
+        event.preventDefault();
+
+        const roomNumber =
+            document.getElementById("roomNumber").value.trim();
+
+        if (!roomNumber) {
+            showMessage("Please enter a room number.", true);
+            return;
+        }
+
+        addRoomButton.disabled = true;
+        showMessage("");
+
+        try {
+            const response = await fetch("/api/admin/rooms", {
+                method: "POST",
+                credentials: "same-origin",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ roomNumber })
+            });
+
+            if (response.status === 401) {
+                window.location.href = "/admin/login";
+                return;
+            }
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(
+                    result.message || "Unable to add room."
+                );
+            }
+
+            showMessage(
+                "Room " + result.roomNumber + " added successfully."
+            );
+
+            form.reset();
+            await loadRooms();
+
+        } catch (error) {
+            showMessage(error.message, true);
+        } finally {
+            addRoomButton.disabled = false;
+        }
+    });
+
+    loadRooms();
+</script>
+
+</body>
+</html>
