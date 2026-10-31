@@ -22,7 +22,6 @@ public class VacateRequestController {
         this.vacateRequestService = vacateRequestService;
     }
 
-    // Student: view their own requests
     @GetMapping("/my")
     public ResponseEntity<?> getMyRequests(HttpSession session) {
 
@@ -50,7 +49,6 @@ public class VacateRequestController {
         return ResponseEntity.ok(requests);
     }
 
-    // Student: submit a new vacate request
     @PostMapping("/my")
     public ResponseEntity<?> submitMyRequest(
             @RequestBody VacateRequestInput input,
@@ -81,7 +79,6 @@ public class VacateRequestController {
         }
     }
 
-    // Admin: view pending requests
     @GetMapping("/admin/pending")
     public ResponseEntity<?> getPendingRequests(HttpSession session) {
 
@@ -110,7 +107,6 @@ public class VacateRequestController {
         return ResponseEntity.ok(pendingRequests);
     }
 
-    // Admin: approve a request and vacate the student
     @PostMapping("/admin/{requestId}/approve")
     public ResponseEntity<?> approveRequest(
             @PathVariable Long requestId,
@@ -138,7 +134,6 @@ public class VacateRequestController {
         }
     }
 
-    // Admin: reject a request without vacating the student
     @PostMapping("/admin/{requestId}/reject")
     public ResponseEntity<?> rejectRequest(
             @PathVariable Long requestId,
@@ -178,15 +173,12 @@ public class VacateRequestController {
                 ));
     }
 
-    // Student request input
     public record VacateRequestInput(String reason) {
     }
 
-    // Admin review input
     public record ReviewInput(String remarks) {
     }
 
-    // Student response
     public record VacateRequestInfo(
             Long id,
             String reason,
@@ -196,7 +188,6 @@ public class VacateRequestController {
     ) {
     }
 
-    // Admin response
     public record AdminVacateRequestInfo(
             Long id,
             Long studentId,

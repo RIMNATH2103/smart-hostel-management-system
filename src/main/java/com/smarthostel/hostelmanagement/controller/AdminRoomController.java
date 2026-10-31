@@ -25,7 +25,6 @@ public class AdminRoomController {
         this.allocationService = allocationService;
     }
 
-    // Data displayed on the admin room management page
     public record RoomInfo(
             Long id,
             String roomNumber,
@@ -60,7 +59,6 @@ public class AdminRoomController {
         );
     }
 
-    // View all rooms and their current occupancy
     @GetMapping
     public ResponseEntity<List<RoomInfo>> getAllRooms(
             HttpSession session) {
@@ -77,7 +75,6 @@ public class AdminRoomController {
         return ResponseEntity.ok(rooms);
     }
 
-    // Add a new room
     @PostMapping
     public ResponseEntity<?> createRoom(
             @RequestBody CreateRoomRequest request,

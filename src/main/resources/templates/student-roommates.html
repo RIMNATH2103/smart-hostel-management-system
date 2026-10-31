@@ -11,6 +11,31 @@
     <link rel="stylesheet"
           th:href="@{/css/style.css}"
           href="/css/style.css">
+
+
+    <style>
+        .remove-roommate-btn {
+            background: #dc4b55;
+            color: white;
+            border: none;
+            padding: 9px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .remove-roommate-btn:hover {
+            background: #b83240;
+        }
+
+        .remove-roommate-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+    </style>
+
 </head>
 
 <body class="dashboard-page">
@@ -92,7 +117,53 @@
 
 <script>
 
-    // Load available students from the backend
+    let canEditPreferences = false;
+
+
+    async function checkEditPermission() {
+        const addButton = document.getElementById("addRoommateButton");
+        const studentSelect = document.getElementById("studentSelect");
+        const message = document.getElementById("preferenceMessage");
+
+        canEditPreferences = false;
+        addButton.disabled = true;
+        studentSelect.disabled = true;
+
+        try {
+            const response = await fetch(
+                "/api/roommate-preferences/my/edit-permission",
+                {
+                    credentials: "same-origin"
+                }
+            );
+
+            if (response.status === 401) {
+                window.location.href = "/student/login";
+                return;
+            }
+
+            if (!response.ok) {
+                throw new Error("Unable to check editing permission.");
+            }
+
+            const result = await response.json();
+
+            canEditPreferences = result.canEdit === true;
+
+            addButton.disabled = !canEditPreferences;
+            studentSelect.disabled = !canEditPreferences;
+
+            message.textContent = result.message;
+            message.style.color = canEditPreferences
+                ? "#168b83"
+                : "#bd4848";
+
+        } catch (error) {
+            message.textContent = error.message;
+            message.style.color = "#bd4848";
+        }
+    }
+
     async function loadAvailableStudents() {
 
         const studentSelect =
@@ -162,8 +233,6 @@
         }
     }
 
-
-    // Load the logged-in student's saved preferences
     async function loadSelectedRoommates() {
 
         const roommateList =
@@ -218,10 +287,67 @@
 
                 registration.textContent = roommate.studentId;
 
+
                 item.appendChild(name);
                 item.appendChild(registration);
 
+                const removeButton = document.createElement("button");
+                removeButton.type = "button";
+                removeButton.className = "remove-roommate-btn";
+                removeButton.textContent = "Remove";
+                removeButton.hidden = !canEditPreferences;
+
+                removeButton.addEventListener("click", async function () {
+                    const confirmed = confirm(
+                        "Remove " + roommate.fullName +
+                        " from your preferred roommates?"
+                    );
+
+                    if (!confirmed) {
+                        return;
+                    }
+
+                    removeButton.disabled = true;
+                    removeButton.textContent = "Removing...";
+
+                    try {
+                        const response = await fetch(
+                            "/api/roommate-preferences/my/" + roommate.id,
+                            {
+                                method: "DELETE",
+                                credentials: "same-origin"
+                            }
+                        );
+
+                        if (response.status === 401) {
+                            window.location.href = "/student/login";
+                            return;
+                        }
+
+                        const result = await response.json();
+
+                        if (!response.ok) {
+                            throw new Error(
+                                result.message || "Unable to remove roommate."
+                            );
+                        }
+
+                        const message = document.getElementById("preferenceMessage");
+                        message.textContent = result.message;
+                        message.style.color = "#159b82";
+
+                        await loadSelectedRoommates();
+
+                    } catch (error) {
+                        alert(error.message);
+                        removeButton.disabled = false;
+                        removeButton.textContent = "Remove";
+                    }
+                });
+
+                item.appendChild(removeButton);
                 roommateList.appendChild(item);
+
             });
 
         } catch (error) {
@@ -238,8 +364,6 @@
         }
     }
 
-
-    // Save the selected roommate
     document.getElementById("addRoommateButton")
         .addEventListener("click", async function () {
 
@@ -306,7 +430,6 @@
 
                     studentSelect.value = "";
 
-                    // Refresh the list immediately
                     await loadSelectedRoommates();
                 }
 
@@ -323,10 +446,17 @@
             }
         });
 
+    async function initializeRoommatePage() {
+        await checkEditPermission();
 
-    // Load data when the page opens
-    loadAvailableStudents();
-    loadSelectedRoommates();
+        await Promise.all([
+            loadAvailableStudents(),
+            loadSelectedRoommates()
+        ]);
+    }
+
+    initializeRoommatePage();
+
 
 </script>
 

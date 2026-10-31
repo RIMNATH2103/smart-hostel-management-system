@@ -3,6 +3,7 @@ package com.smarthostel.hostelmanagement.controller;
 
 import com.smarthostel.hostelmanagement.entity.Student;
 import com.smarthostel.hostelmanagement.service.StudentService;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,7 +20,6 @@ public class StudentController {
         this.studentService = studentService;
     }
 
-    // CREATE: Register a student
     @PostMapping("/register")
     public ResponseEntity<?> registerStudent(
             @RequestBody Student student) {
@@ -39,28 +39,40 @@ public class StudentController {
         }
     }
 
-    // READ: Get all students
     @GetMapping
-    public List<Student> getAllStudents() {
-        return studentService.getAllStudents();
+    public ResponseEntity<?> getAllStudents(HttpSession session) {
+
+        if (!isAdmin(session)) {
+            return unauthorized();
+        }
+
+        List<Student> students = studentService.getAllStudents();
+        return ResponseEntity.ok(students);
     }
 
-    // READ: Get a student by ID
     @GetMapping("/{id}")
-    public ResponseEntity<Student> getStudentById(
-            @PathVariable Long id) {
+    public ResponseEntity<?> getStudentById(
+            @PathVariable Long id,
+            HttpSession session) {
+
+        if (!isAdmin(session)) {
+            return unauthorized();
+        }
 
         return studentService.getStudentById(id)
-                .map(ResponseEntity::ok)
-                .orElseGet(() ->
-                        ResponseEntity.notFound().build());
+                .<ResponseEntity<?>>map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    // UPDATE: Edit student information
     @PutMapping("/{id}")
     public ResponseEntity<?> updateStudent(
             @PathVariable Long id,
-            @RequestBody Student student) {
+            @RequestBody Student student,
+            HttpSession session) {
+
+        if (!isAdmin(session)) {
+            return unauthorized();
+        }
 
         try {
             Student updatedStudent =
@@ -77,10 +89,14 @@ public class StudentController {
         }
     }
 
-    // DELETE: Remove a student
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteStudent(
-            @PathVariable Long id) {
+            @PathVariable Long id,
+            HttpSession session) {
+
+        if (!isAdmin(session)) {
+            return unauthorized();
+        }
 
         try {
             studentService.deleteStudent(id);
@@ -93,5 +109,14 @@ public class StudentController {
             return ResponseEntity.badRequest()
                     .body(exception.getMessage());
         }
+    }
+
+    private boolean isAdmin(HttpSession session) {
+        return session.getAttribute("adminId") instanceof Long;
+    }
+
+    private ResponseEntity<?> unauthorized() {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body("Administrator login required.");
     }
 }

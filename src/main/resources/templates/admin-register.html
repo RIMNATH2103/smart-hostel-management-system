@@ -1,0 +1,316 @@
+
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Registration | Smart Hostel</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}" href="/css/style.css">
+
+
+    <style>
+        /* Keep the registration form readable on all screen sizes */
+        .login-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .login-card.admin-registration-card {
+            width: 100%;
+            max-width: 520px;
+            min-width: 0;
+            box-sizing: border-box;
+        }
+
+        .admin-registration-card .login-heading {
+            width: 100%;
+        }
+
+        .admin-registration-card .login-heading p {
+            width: 100%;
+            max-width: none;
+            overflow-wrap: normal;
+        }
+
+        .admin-registration-card form {
+            display: block;
+            width: 100%;
+            min-width: 0;
+        }
+
+        .admin-registration-card .form-group {
+            display: block;
+            width: 100%;
+            margin-bottom: 17px;
+        }
+
+        .admin-registration-card .form-group label {
+            display: block;
+            width: 100%;
+            margin-bottom: 8px;
+        }
+
+        .admin-registration-card .form-group input {
+            display: block;
+            width: 100%;
+            min-width: 0;
+            padding: 12px 14px;
+            box-sizing: border-box;
+        }
+
+        .admin-registration-card .login-submit {
+            display: block;
+            width: 100%;
+            padding: 13px;
+        }
+
+        .admin-registration-card a {
+            color: #7850bb;
+            font-weight: 600;
+        }
+
+        .registration-message {
+            margin: 12px 0;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        @media (max-width: 600px) {
+            .login-container {
+                padding: 20px;
+            }
+
+            .login-card.admin-registration-card {
+                max-width: 100%;
+            }
+        }
+
+
+        /* Wider registration form */
+        .login-card.admin-registration-card {
+            max-width: 1100px;
+            padding: 55px 43% 55px 55px;
+        }
+
+        /* Make the form use all available space */
+        .admin-registration-card #adminRegistrationForm {
+            width: 100%;
+            min-width: 0;
+        }
+
+        /* Bigger input fields */
+        .admin-registration-card .form-group input {
+            width: 100%;
+            height: 54px;
+            padding: 14px 18px;
+            font-size: 16px;
+        }
+
+        /* Wider labels and heading */
+        .admin-registration-card .form-group label,
+        .admin-registration-card .login-heading {
+            width: 100%;
+        }
+
+        /* Bigger registration button */
+        .admin-registration-card .login-submit {
+            width: 100%;
+            min-height: 54px;
+            font-size: 16px;
+        }
+
+        /* Responsive layout */
+        @media (max-width: 1100px) {
+            .login-card.admin-registration-card {
+                max-width: 600px;
+                padding: 45px 40px;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .login-card.admin-registration-card {
+                padding: 30px 22px;
+            }
+        }
+
+    </style>
+
+</head>
+
+<body class="login-page">
+
+<header class="navbar">
+    <div class="logo">🏠 Smart Hostel</div>
+    <nav>
+        <a th:href="@{/admin/dashboard}" href="/admin/dashboard">
+            Admin Dashboard
+        </a>
+    </nav>
+</header>
+
+<main class="login-container">
+    <section class="login-card admin-registration-card">
+
+        <div class="login-heading">
+            <div class="login-icon">🛡️</div>
+            <h1>Admin Registration</h1>
+            <p>Create an account for another hostel administrator.</p>
+        </div>
+
+        <form id="adminRegistrationForm">
+
+            <div class="form-group">
+                <label for="fullName">Full Name</label>
+                <input type="text"
+                       id="fullName"
+                       placeholder="Enter administrator's full name"
+                       autocomplete="name"
+                       required>
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <input type="email"
+                       id="email"
+                       placeholder="Enter administrator's email"
+                       autocomplete="email"
+                       required>
+            </div>
+
+            <div class="form-group">
+                <label for="phoneNumber">Phone Number</label>
+                <input type="tel"
+                       id="phoneNumber"
+                       placeholder="Enter phone number"
+                       pattern="[0-9]{10,15}"
+                       title="Enter 10 to 15 digits"
+                       autocomplete="tel">
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password"
+                       id="password"
+                       placeholder="At least 8 characters"
+                       minlength="8"
+                       autocomplete="new-password"
+                       required>
+            </div>
+
+            <div class="form-group">
+                <label for="confirmPassword">Confirm Password</label>
+                <input type="password"
+                       id="confirmPassword"
+                       placeholder="Re-enter password"
+                       minlength="8"
+                       autocomplete="new-password"
+                       required>
+            </div>
+
+            <p id="registrationMessage"
+               class="registration-message"
+               role="status"
+               aria-live="polite"></p>
+
+            <button type="submit"
+                    class="login-submit"
+                    id="registerButton">
+                Create Admin Account
+            </button>
+
+        </form>
+
+        <p class="login-footer-text">
+            <a th:href="@{/admin/dashboard}" href="/admin/dashboard">
+                Back to Admin Dashboard
+            </a>
+        </p>
+
+    </section>
+</main>
+
+<script>
+    const registrationForm =
+        document.getElementById("adminRegistrationForm");
+
+    const registrationMessage =
+        document.getElementById("registrationMessage");
+
+    const registerButton =
+        document.getElementById("registerButton");
+
+    registrationForm.addEventListener("submit", async function (event) {
+        event.preventDefault();
+
+        const fullName =
+            document.getElementById("fullName").value.trim();
+
+        const email =
+            document.getElementById("email").value.trim();
+
+        const phoneNumber =
+            document.getElementById("phoneNumber").value.trim();
+
+        const password =
+            document.getElementById("password").value;
+
+        const confirmPassword =
+            document.getElementById("confirmPassword").value;
+
+        registrationMessage.textContent = "";
+
+        if (password !== confirmPassword) {
+            registrationMessage.style.color = "#d74759";
+            registrationMessage.textContent =
+                "Passwords do not match.";
+            return;
+        }
+
+        registerButton.disabled = true;
+        registerButton.textContent = "Creating Account...";
+
+        try {
+            const response = await fetch("/api/admin-auth/register", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                credentials: "same-origin",
+                body: JSON.stringify({
+                    fullName: fullName,
+                    email: email,
+                    phoneNumber: phoneNumber,
+                    password: password
+                })
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                registrationMessage.style.color = "#17b6a4";
+                registrationMessage.textContent =
+                    result.message || "Administrator registered successfully.";
+
+                registrationForm.reset();
+            } else {
+                registrationMessage.style.color = "#d74759";
+                registrationMessage.textContent =
+                    result.message || "Registration failed.";
+            }
+
+        } catch (error) {
+            registrationMessage.style.color = "#d74759";
+            registrationMessage.textContent =
+                "Unable to connect to the server. Please try again.";
+        } finally {
+            registerButton.disabled = false;
+            registerButton.textContent = "Create Admin Account";
+        }
+    });
+</script>
+
+</body>
+</html>

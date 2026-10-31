@@ -36,22 +36,18 @@ public class StudentService {
         this.roommatePreferenceRepository = roommatePreferenceRepository;
     }
 
-    // READ: Get all students
     public List<Student> getAllStudents() {
         return studentRepository.findAll();
     }
 
-    // READ: Get student by database ID
     public Optional<Student> getStudentById(Long id) {
         return studentRepository.findById(id);
     }
 
-    // READ: Get student by email
     public Optional<Student> getStudentByEmail(String email) {
         return studentRepository.findByEmail(email);
     }
 
-    // READ: Get student by registration number
     public Optional<Student> getStudentByStudentId(String studentId) {
         return studentRepository.findByStudentId(studentId);
     }
@@ -64,8 +60,6 @@ public class StudentService {
         return !studentRepository.existsByStudentId(studentId);
     }
 
-
-    // Validate new student registration
     private void validateNewStudent(Student student) {
 
         if (student == null) {
@@ -95,9 +89,6 @@ public class StudentService {
             );
         }
     }
-
-
-    // Validate common student information
 
     private void validateStudentDetails(Student student) {
 
@@ -137,8 +128,6 @@ public class StudentService {
         }
     }
 
-
-    // CREATE: Register a new student
     public Student registerStudent(Student student) {
 
         validateNewStudent(student);
@@ -150,7 +139,6 @@ public class StudentService {
         return studentRepository.save(student);
     }
 
-    // UPDATE: Edit student information
     public Student updateStudent(Long id, Student updatedStudent) {
 
         Student existingStudent = studentRepository.findById(id)
@@ -187,11 +175,9 @@ public class StudentService {
         existingStudent.setPhoneNumber(updatedStudent.getPhoneNumber());
         existingStudent.setStudentId(updatedStudent.getStudentId());
 
-        // Keep the existing password unchanged
         return studentRepository.save(existingStudent);
     }
 
-    // DELETE: Protect related hostel records
     @Transactional
     public void deleteStudent(Long id) {
 
@@ -223,7 +209,6 @@ public class StudentService {
         studentRepository.delete(student);
     }
 
-    // Check student login credentials
     public Optional<Student> authenticateStudent(
             String username, String password) {
 

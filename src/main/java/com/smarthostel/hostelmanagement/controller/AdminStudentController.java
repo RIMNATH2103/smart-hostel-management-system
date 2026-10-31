@@ -27,7 +27,6 @@ public class AdminStudentController {
         this.allocationService = allocationService;
     }
 
-    // Information displayed on the Student Management page
     public record StudentInfo(
             Long id,
             String studentId,
@@ -41,7 +40,6 @@ public class AdminStudentController {
         return session.getAttribute("adminId") instanceof Long;
     }
 
-    // Convert a student into safe information for the admin page
     private StudentInfo toStudentInfo(Student student) {
 
         Optional<RoomAllocation> allocation =
@@ -64,7 +62,6 @@ public class AdminStudentController {
         );
     }
 
-    // View all registered students
     @GetMapping
     public ResponseEntity<List<StudentInfo>> getAllStudents(
             HttpSession session) {

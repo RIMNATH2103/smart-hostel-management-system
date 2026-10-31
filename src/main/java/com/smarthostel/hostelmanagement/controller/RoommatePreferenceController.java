@@ -5,6 +5,7 @@ import com.smarthostel.hostelmanagement.entity.RoommatePreference;
 import com.smarthostel.hostelmanagement.entity.Student;
 import com.smarthostel.hostelmanagement.service.RoommatePreferenceService;
 import com.smarthostel.hostelmanagement.service.StudentService;
+import com.smarthostel.hostelmanagement.service.RoomAllocationService;
 
 import jakarta.servlet.http.HttpSession;
 import org.springframework.http.HttpStatus;
@@ -20,16 +21,20 @@ public class RoommatePreferenceController {
 
     private final RoommatePreferenceService preferenceService;
     private final StudentService studentService;
+    private final RoomAllocationService allocationService;
+
 
     public RoommatePreferenceController(
             RoommatePreferenceService preferenceService,
-            StudentService studentService) {
+            StudentService studentService,
+            RoomAllocationService allocationService) {
 
         this.preferenceService = preferenceService;
         this.studentService = studentService;
+        this.allocationService = allocationService;
     }
 
-    // View the logged-in student's selected roommates
+
     @GetMapping("/my")
     public ResponseEntity<?> getMyPreferences(HttpSession session) {
 
@@ -55,7 +60,6 @@ public class RoommatePreferenceController {
         return ResponseEntity.ok(preferences);
     }
 
-    // Select a preferred roommate for the logged-in student
     @PostMapping("/my")
     public ResponseEntity<?> addMyPreference(
             @RequestBody PreferenceRequest request,
@@ -98,14 +102,18 @@ public class RoommatePreferenceController {
                             "Roommate preference saved successfully."
                     ));
 
+
         } catch (IllegalArgumentException exception) {
             return ResponseEntity.badRequest()
                     .body(Map.of("message", exception.getMessage()));
+
+        } catch (IllegalStateException exception) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(Map.of("message", exception.getMessage()));
         }
+
     }
 
-
-    // Get students available for roommate selection
     @GetMapping("/available-students")
     public ResponseEntity<?> getAvailableStudents(HttpSession session) {
 
@@ -119,8 +127,12 @@ public class RoommatePreferenceController {
         List<Map<String, Object>> students =
                 studentService.getAllStudents()
                         .stream()
+
                         .filter(student ->
                                 !student.getId().equals(studentId))
+                        .filter(student ->
+                                allocationService.getCurrentAllocation(student.getId()).isEmpty())
+
                         .map(student -> Map.<String, Object>of(
                                 "id", student.getId(),
                                 "studentId", student.getStudentId(),
@@ -131,8 +143,65 @@ public class RoommatePreferenceController {
         return ResponseEntity.ok(students);
     }
 
-
-    // Request body contains only the preferred student's database ID
     public record PreferenceRequest(Long preferredStudentId) {
     }
+
+    @DeleteMapping("/my/{preferenceId}")
+    public ResponseEntity<?> removeMyPreference(
+            @PathVariable Long preferenceId,
+            HttpSession session) {
+
+        Object studentId = session.getAttribute("studentId");
+
+        if (!(studentId instanceof Long id)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("message", "Please log in first."));
+        }
+
+        try {
+            preferenceService.removePreference(id, preferenceId);
+
+            return ResponseEntity.ok(
+                    Map.of("message", "Roommate preference removed successfully.")
+            );
+
+        } catch (IllegalArgumentException exception) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("message", exception.getMessage()));
+
+        } catch (IllegalStateException exception) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(Map.of("message", exception.getMessage()));
+        }
+    }
+
+    @GetMapping("/my/edit-permission")
+    public ResponseEntity<?> getEditPermission(HttpSession session) {
+
+        Object studentId = session.getAttribute("studentId");
+
+        if (!(studentId instanceof Long id)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("message", "Please log in first."));
+        }
+
+        if (studentService.getStudentById(id).isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("message", "Student account not found."));
+        }
+
+        boolean canEdit = allocationService
+                .getCurrentAllocation(id)
+                .isEmpty();
+
+        return ResponseEntity.ok(
+                Map.of(
+                        "canEdit", canEdit,
+                        "message", canEdit
+                                ? "You can manage your roommate preferences."
+                                : "Roommate preferences are locked while you have an allocated room."
+                )
+        );
+    }
+
 }

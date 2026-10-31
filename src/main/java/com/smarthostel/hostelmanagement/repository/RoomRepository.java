@@ -6,6 +6,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface RoomRepository extends JpaRepository<Room, Long> {
 
-    // Check whether a room number is already registered
     boolean existsByRoomNumberIgnoreCase(String roomNumber);
 }

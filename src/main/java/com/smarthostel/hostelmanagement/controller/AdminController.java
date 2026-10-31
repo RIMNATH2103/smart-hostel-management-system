@@ -18,13 +18,12 @@ public class AdminController {
         this.adminService = adminService;
     }
 
-    // Get all admins
+
     @GetMapping
     public List<Admin> getAllAdmins() {
         return adminService.getAllAdmins();
     }
 
-    // Get an admin by ID
     @GetMapping("/{id}")
     public ResponseEntity<Admin> getAdminById(
             @PathVariable Long id) {
@@ -34,7 +33,6 @@ public class AdminController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    // Find an admin by email
     @GetMapping("/email")
     public ResponseEntity<Admin> getAdminByEmail(
             @RequestParam String email) {

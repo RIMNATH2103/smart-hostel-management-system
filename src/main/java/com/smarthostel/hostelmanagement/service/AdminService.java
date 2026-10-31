@@ -23,17 +23,14 @@ public class AdminService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    // Get all administrators
     public List<Admin> getAllAdmins() {
         return adminRepository.findAll();
     }
 
-    // Find an administrator by ID
     public Optional<Admin> getAdminById(Long id) {
         return adminRepository.findById(id);
     }
 
-    // Find an administrator by email
     public Optional<Admin> getAdminByEmail(String email) {
 
         if (email == null || email.isBlank()) {
@@ -43,7 +40,6 @@ public class AdminService {
         return adminRepository.findByEmail(email.trim());
     }
 
-    // Authenticate an administrator using email and password
     public Optional<Admin> authenticateAdmin(
             String email,
             String password) {
@@ -53,14 +49,12 @@ public class AdminService {
             return Optional.empty();
         }
 
-        Optional<Admin> admin =
-                getAdminByEmail(email);
+        Optional<Admin> admin = getAdminByEmail(email);
 
         if (admin.isEmpty()) {
             return Optional.empty();
         }
 
-        // Compare the entered password with the stored BCrypt hash
         boolean passwordMatches = passwordEncoder.matches(
                 password,
                 admin.get().getPassword()
@@ -71,5 +65,72 @@ public class AdminService {
         }
 
         return admin;
+    }
+
+    public Admin registerAdmin(Admin admin) {
+
+        if (admin == null) {
+            throw new IllegalArgumentException(
+                    "Administrator details are required."
+            );
+        }
+
+        if (admin.getFullName() == null
+                || admin.getFullName().isBlank()) {
+            throw new IllegalArgumentException(
+                    "Full name is required."
+            );
+        }
+
+        if (admin.getEmail() == null
+                || admin.getEmail().isBlank()) {
+            throw new IllegalArgumentException(
+                    "Email address is required."
+            );
+        }
+
+        String email = admin.getEmail().trim().toLowerCase();
+
+        if (!email.matches("^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")) {
+            throw new IllegalArgumentException(
+                    "Enter a valid email address."
+            );
+        }
+
+        if (adminRepository.findByEmail(email).isPresent()) {
+            throw new IllegalArgumentException(
+                    "This email address is already registered."
+            );
+        }
+
+        if (admin.getPassword() == null
+                || admin.getPassword().length() < 8) {
+            throw new IllegalArgumentException(
+                    "Password must contain at least 8 characters."
+            );
+        }
+
+        String phoneNumber = admin.getPhoneNumber();
+
+        if (phoneNumber != null && !phoneNumber.isBlank()) {
+            phoneNumber = phoneNumber.trim();
+
+            if (!phoneNumber.matches("\\+?[0-9]{10,15}")) {
+                throw new IllegalArgumentException(
+                        "Phone number must contain 10 to 15 digits."
+                );
+            }
+        }
+
+        Admin newAdmin = new Admin();
+        newAdmin.setFullName(admin.getFullName().trim());
+        newAdmin.setEmail(email);
+        newAdmin.setPhoneNumber(phoneNumber);
+
+        newAdmin.setPassword(
+                passwordEncoder.encode(admin.getPassword())
+        );
+
+        return adminRepository.save(newAdmin);
     }
 }

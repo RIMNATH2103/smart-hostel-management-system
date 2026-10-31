@@ -1,6 +1,6 @@
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -129,28 +129,64 @@
             background: #fde9e9;
             color: #a12626;
         }
+
+        .admin-nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .admin-profile-button {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #168b83;
+            color: white;
+            text-decoration: none;
+            border-radius: 9px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .admin-profile-button:hover {
+            background: #116e68;
+        }
+
     </style>
 </head>
 
 <body>
 
+
 <nav class="admin-nav">
     <h2>Smart Hostel | Admin</h2>
 
-    <button class="admin-logout" id="adminLogoutButton">
-        Logout
-    </button>
+    <div class="admin-nav-actions">
+        <a href="/admin/profile" class="admin-profile-button">
+            👤 My Profile
+        </a>
+
+        <button class="admin-logout" id="adminLogoutButton">
+            Logout
+        </button>
+    </div>
 </nav>
+
 
 <main class="admin-container">
 
+
     <div class="admin-heading">
-        <h1>Admin Dashboard</h1>
+        <h1>
+            Welcome, <span th:text="${adminName}">Administrator</span>! 👋
+        </h1>
+
         <p>
             Manage hostel rooms, students, allocations,
             and vacate requests.
         </p>
     </div>
+
 
     <div class="admin-grid">
 
@@ -229,6 +265,24 @@
             </a>
         </article>
 
+        <article class="admin-card">
+            <div class="admin-card-icon">🛡️</div>
+
+            <h2>Admin Registration</h2>
+
+            <p>
+                Create accounts for new hostel administrators.
+                Only authorized administrators can register
+                additional admin accounts.
+            </p>
+
+            <a href="/admin/register"
+               class="admin-card-link">
+                Register New Admin
+            </a>
+        </article>
+
+
     </div>
 
 </main>
@@ -246,7 +300,6 @@
         "allocationMessage"
     );
 
-    // Show allocation feedback to the administrator
     function showAllocationMessage(message, isSuccess) {
         allocationMessage.textContent = message;
         allocationMessage.className = isSuccess
@@ -256,7 +309,6 @@
         allocationMessage.style.display = "block";
     }
 
-    // Start allocation only after admin confirmation
     autoAllocateButton.addEventListener("click", async function () {
 
         const confirmed = confirm(
@@ -322,7 +374,6 @@
         }
     });
 
-    // Admin logout
     logoutButton.addEventListener("click", async function () {
 
         logoutButton.disabled = true;

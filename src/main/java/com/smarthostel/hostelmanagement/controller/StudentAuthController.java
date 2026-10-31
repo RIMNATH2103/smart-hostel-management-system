@@ -21,7 +21,6 @@ public class StudentAuthController {
         this.studentService = studentService;
     }
 
-    // Check student credentials and create a login session
     @PostMapping("/login")
     public ResponseEntity<Map<String, String>> login(
             @RequestBody LoginRequest loginRequest,
@@ -37,7 +36,6 @@ public class StudentAuthController {
             );
         }
 
-        // Create a fresh session after successful authentication
         HttpSession existingSession = request.getSession(false);
 
         if (existingSession != null) {
@@ -52,7 +50,6 @@ public class StudentAuthController {
         );
     }
 
-    // Log out the student and end their session
     @PostMapping("/logout")
     public ResponseEntity<Map<String, String>> logout(
             HttpServletRequest request) {

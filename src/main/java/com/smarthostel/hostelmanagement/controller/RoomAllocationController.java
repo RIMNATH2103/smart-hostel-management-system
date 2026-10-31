@@ -22,7 +22,6 @@ public class RoomAllocationController {
         this.allocationService = allocationService;
     }
 
-    // Return only the information needed by the admin history page
     public record AllocationInfo(
             Long id,
             StudentInfo student,
@@ -62,7 +61,6 @@ public class RoomAllocationController {
         return session.getAttribute("adminId") instanceof Long;
     }
 
-    // Admin-only allocation history
     @GetMapping
     public ResponseEntity<List<AllocationInfo>> getAllAllocations(
             HttpSession session) {
@@ -80,7 +78,6 @@ public class RoomAllocationController {
         return ResponseEntity.ok(allocations);
     }
 
-    // Admin-only allocation details
     @GetMapping("/{id}")
     public ResponseEntity<AllocationInfo> getAllocationById(
             @PathVariable Long id,
@@ -96,7 +93,6 @@ public class RoomAllocationController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    // Admin-only current room members
     @GetMapping("/room/{roomId}")
     public ResponseEntity<List<AllocationInfo>> getActiveAllocations(
             @PathVariable Long roomId,
@@ -115,7 +111,6 @@ public class RoomAllocationController {
         return ResponseEntity.ok(allocations);
     }
 
-    // Admin-only occupied spaces
     @GetMapping("/room/{roomId}/occupied")
     public ResponseEntity<Integer> getOccupiedSlots(
             @PathVariable Long roomId,
@@ -130,7 +125,6 @@ public class RoomAllocationController {
         );
     }
 
-    // Admin-only room availability
     @GetMapping("/room/{roomId}/available")
     public ResponseEntity<Boolean> hasAvailableSlot(
             @PathVariable Long roomId,
@@ -145,7 +139,6 @@ public class RoomAllocationController {
         );
     }
 
-    // Only an administrator can start automatic allocation
     @PostMapping("/admin/auto-allocate")
     public ResponseEntity<Map<String, Object>> autoAllocate(
             HttpSession session) {
@@ -166,4 +159,30 @@ public class RoomAllocationController {
                 )
         );
     }
+
+    @PostMapping("/admin/vacate-student/{studentId}")
+    public ResponseEntity<Map<String, String>> vacateStudent(
+            @PathVariable Long studentId,
+            HttpSession session) {
+
+        if (!isAdminLoggedIn(session)) {
+            return ResponseEntity.status(401).body(
+                    Map.of("message", "Admin login required")
+            );
+        }
+
+        try {
+            allocationService.vacateStudentByAdmin(studentId);
+
+            return ResponseEntity.ok(
+                    Map.of("message", "Student vacated successfully")
+            );
+
+        } catch (IllegalArgumentException exception) {
+            return ResponseEntity.badRequest().body(
+                    Map.of("message", exception.getMessage())
+            );
+        }
+    }
+
 }

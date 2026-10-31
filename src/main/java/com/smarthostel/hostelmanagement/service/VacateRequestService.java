@@ -52,7 +52,6 @@ public class VacateRequestService {
                 .toList();
     }
 
-    // Student submits a request, but cannot vacate themselves
     @Transactional
     public VacateRequest submitVacateRequest(
             Long studentId, String reason) {
@@ -104,7 +103,6 @@ public class VacateRequestService {
         return vacateRequestRepository.save(request);
     }
 
-    // Administrator approves a request and vacates the student
     @Transactional
     public VacateRequest approveRequest(Long requestId, String remarks) {
 
@@ -127,18 +125,15 @@ public class VacateRequestService {
             );
         }
 
-        // Keep the allocation record for room occupancy history
         allocation.setVacatedAt(LocalDateTime.now());
 
         request.setStatus(VacateRequest.RequestStatus.APPROVED);
         request.setAdminRemarks(cleanRemarks(remarks));
         request.setReviewedAt(LocalDateTime.now());
 
-        // Transaction saves changes to the managed entities
         return vacateRequestRepository.save(request);
     }
 
-    // Administrator rejects a request without changing room allocation
     @Transactional
     public VacateRequest rejectRequest(Long requestId, String remarks) {
 
@@ -160,7 +155,6 @@ public class VacateRequestService {
         return vacateRequestRepository.save(request);
     }
 
-    // Clean optional administrator remarks
     private String cleanRemarks(String remarks) {
 
         if (remarks == null || remarks.isBlank()) {

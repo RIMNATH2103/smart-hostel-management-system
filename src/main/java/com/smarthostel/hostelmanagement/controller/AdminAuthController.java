@@ -7,6 +7,7 @@ import com.smarthostel.hostelmanagement.service.AdminService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,7 +24,6 @@ public class AdminAuthController {
         this.adminService = adminService;
     }
 
-    // Admin login
     @PostMapping("/login")
     public ResponseEntity<Map<String, String>> login(
             @RequestBody LoginRequest loginRequest,
@@ -35,19 +35,17 @@ public class AdminAuthController {
         );
 
         if (admin.isEmpty()) {
-            return ResponseEntity.status(401).body(
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
                     Map.of("message", "Invalid email or password.")
             );
         }
 
-        // Invalidate any previous session
         HttpSession existingSession = request.getSession(false);
 
         if (existingSession != null) {
             existingSession.invalidate();
         }
 
-        // Create a new session for the administrator
         HttpSession session = request.getSession(true);
         session.setAttribute("adminId", admin.get().getId());
 
@@ -56,7 +54,6 @@ public class AdminAuthController {
         );
     }
 
-    // Admin logout
     @PostMapping("/logout")
     public ResponseEntity<Map<String, String>> logout(
             HttpServletRequest request) {
@@ -72,7 +69,50 @@ public class AdminAuthController {
         );
     }
 
-    // Login form data
+    @PostMapping("/register")
+    public ResponseEntity<Map<String, String>> register(
+            @RequestBody AdminRegistrationRequest registration,
+            HttpServletRequest request) {
+
+        HttpSession session = request.getSession(false);
+
+        if (session == null
+                || !(session.getAttribute("adminId") instanceof Long adminId)
+                || adminService.getAdminById(adminId).isEmpty()) {
+
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
+                    Map.of("message", "Administrator login required.")
+            );
+        }
+
+        try {
+            Admin newAdmin = new Admin();
+            newAdmin.setFullName(registration.fullName());
+            newAdmin.setEmail(registration.email());
+            newAdmin.setPhoneNumber(registration.phoneNumber());
+            newAdmin.setPassword(registration.password());
+
+            adminService.registerAdmin(newAdmin);
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(
+                    Map.of("message", "Administrator registered successfully.")
+            );
+
+        } catch (IllegalArgumentException exception) {
+            return ResponseEntity.badRequest().body(
+                    Map.of("message", exception.getMessage())
+            );
+        }
+    }
+
     public record LoginRequest(String email, String password) {
+    }
+
+    public record AdminRegistrationRequest(
+            String fullName,
+            String email,
+            String phoneNumber,
+            String password
+    ) {
     }
 }

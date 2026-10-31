@@ -6,6 +6,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Dashboard | Smart Hostel</title>
     <link rel="stylesheet" th:href="@{/css/style.css}" href="/css/style.css">
+
+    <style>
+        .student-nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .student-profile-btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #168b83;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .student-profile-btn:hover {
+            background: #116e68;
+            color: white !important;
+        }
+    </style>
+
 </head>
 <body class="dashboard-page">
 
@@ -13,14 +39,27 @@
     <div class="logo">🏠 Smart Hostel</div>
 
 
-    <nav>
-        <a th:href="@{/student/dashboard}" href="/student/dashboard">Dashboard</a>
-        <a th:href="@{/}" href="/">Home</a>
+
+    <nav class="student-nav-actions">
+        <a th:href="@{/student/dashboard}" href="/student/dashboard">
+            Dashboard
+        </a>
+
+        <a th:href="@{/}" href="/">
+            Home
+        </a>
+
+        <a th:href="@{/student/profile}"
+           href="/student/profile"
+           class="student-profile-btn">
+            👤 My Profile
+        </a>
 
         <button type="button" id="logoutButton" class="logout-btn">
             Logout
         </button>
     </nav>
+
 
 </header>
 
@@ -159,10 +198,6 @@
         }
     });
 </script>
-
-</body>
-</html>
-
 
 </body>
 </html>

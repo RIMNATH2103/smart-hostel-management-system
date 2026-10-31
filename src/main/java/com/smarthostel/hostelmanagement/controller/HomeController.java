@@ -5,6 +5,8 @@ import com.smarthostel.hostelmanagement.entity.Student;
 import com.smarthostel.hostelmanagement.entity.RoomAllocation;
 import com.smarthostel.hostelmanagement.service.StudentService;
 import com.smarthostel.hostelmanagement.service.RoomAllocationService;
+import com.smarthostel.hostelmanagement.entity.Admin;
+import com.smarthostel.hostelmanagement.service.AdminService;
 
 import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
@@ -19,22 +21,23 @@ public class HomeController {
 
     private final StudentService studentService;
     private final RoomAllocationService roomAllocationService;
+    private final AdminService adminService;
 
     public HomeController(
             StudentService studentService,
-            RoomAllocationService roomAllocationService) {
+            RoomAllocationService roomAllocationService,
+            AdminService adminService) {
 
         this.studentService = studentService;
         this.roomAllocationService = roomAllocationService;
+        this.adminService = adminService;
     }
 
-    // Display the homepage
     @GetMapping("/")
     public String showHomePage() {
         return "index";
     }
 
-    // Display the student login page
     @GetMapping("/student/login")
     public String showStudentLoginPage(HttpSession session) {
 
@@ -45,7 +48,16 @@ public class HomeController {
         return "student-login";
     }
 
-    // Display the logged-in student's dashboard
+    @GetMapping("/student/register")
+    public String showStudentRegistrationPage(HttpSession session) {
+
+        if (session.getAttribute("studentId") instanceof Long) {
+            return "redirect:/student/dashboard";
+        }
+
+        return "student-register";
+    }
+
     @GetMapping("/student/dashboard")
     public String showStudentDashboard(
             HttpSession session, Model model) {
@@ -69,7 +81,6 @@ public class HomeController {
                 student.get().getFullName()
         );
 
-        // Find the student's current room
         Optional<RoomAllocation> allocation =
                 roomAllocationService.getCurrentAllocation((Long) studentId);
 
@@ -92,7 +103,6 @@ public class HomeController {
                     roomAllocationService.getOccupiedSlots(roomId)
             );
 
-            // Retrieve other students sharing the room
             List<RoommateInfo> roommates =
                     roomAllocationService.getActiveAllocations(roomId)
                             .stream()
@@ -116,14 +126,46 @@ public class HomeController {
         return "student-dashboard";
     }
 
-    // Information displayed in the student's roommates list
+    @GetMapping("/student/profile")
+    public String showStudentProfile(HttpSession session, Model model) {
+
+        Object studentId = session.getAttribute("studentId");
+
+        if (!(studentId instanceof Long id)) {
+            return "redirect:/student/login";
+        }
+
+        Optional<Student> student = studentService.getStudentById(id);
+
+        if (student.isEmpty()) {
+            session.invalidate();
+            return "redirect:/student/login";
+        }
+
+        model.addAttribute("student", student.get());
+
+        Optional<RoomAllocation> allocation =
+                roomAllocationService.getCurrentAllocation(id);
+
+        if (allocation.isPresent()) {
+            model.addAttribute(
+                    "roomNumber",
+                    allocation.get().getRoom().getRoomNumber()
+            );
+        } else {
+            model.addAttribute("roomNumber", "Not allocated");
+        }
+
+        return "student-profile";
+    }
+
+
     public record RoommateInfo(
             String fullName,
             String studentId
     ) {
     }
 
-    // Display roommate preferences page
     @GetMapping("/student/roommates")
     public String showRoommatePreferencesPage(HttpSession session) {
 
@@ -136,7 +178,6 @@ public class HomeController {
         return "student-roommates";
     }
 
-    // Display student vacate request page
     @GetMapping("/student/vacate-request")
     public String showVacateRequestPage(HttpSession session) {
 
@@ -149,7 +190,6 @@ public class HomeController {
         return "student-vacate-request";
     }
 
-    // Display admin login page
     @GetMapping("/admin/login")
     public String showAdminLoginPage(HttpSession session) {
 
@@ -162,20 +202,61 @@ public class HomeController {
         return "admin-login";
     }
 
-    // Display admin dashboard
+    @GetMapping("/admin/register")
+    public String showAdminRegistrationPage(HttpSession session) {
+
+        Object adminId = session.getAttribute("adminId");
+
+        if (!(adminId instanceof Long id)
+                || adminService.getAdminById(id).isEmpty()) {
+            return "redirect:/admin/login";
+        }
+
+        return "admin-register";
+    }
+
     @GetMapping("/admin/dashboard")
     public String showAdminDashboard(HttpSession session, Model model) {
 
         Object adminId = session.getAttribute("adminId");
 
-        if (!(adminId instanceof Long)) {
+        if (!(adminId instanceof Long id)) {
             return "redirect:/admin/login";
         }
+
+        Optional<Admin> admin = adminService.getAdminById(id);
+
+        if (admin.isEmpty()) {
+            session.invalidate();
+            return "redirect:/admin/login";
+        }
+
+        model.addAttribute("adminName", admin.get().getFullName());
 
         return "admin-dashboard";
     }
 
-    // Display admin vacate requests page
+    @GetMapping("/admin/profile")
+    public String showAdminProfile(HttpSession session, Model model) {
+
+        Object adminId = session.getAttribute("adminId");
+
+        if (!(adminId instanceof Long id)) {
+            return "redirect:/admin/login";
+        }
+
+        Optional<Admin> admin = adminService.getAdminById(id);
+
+        if (admin.isEmpty()) {
+            session.invalidate();
+            return "redirect:/admin/login";
+        }
+
+        model.addAttribute("admin", admin.get());
+
+        return "admin-profile";
+    }
+
     @GetMapping("/admin/vacate-requests")
     public String showAdminVacateRequestsPage(HttpSession session) {
 
@@ -188,7 +269,6 @@ public class HomeController {
         return "admin-vacate-requests";
     }
 
-    // Display the Room Management page for administrators
     @GetMapping("/admin/rooms")
     public String showAdminRoomsPage(HttpSession session) {
 
@@ -199,8 +279,6 @@ public class HomeController {
         return "admin-rooms";
     }
 
-
-    // Display current allocations and previous room history
     @GetMapping("/admin/allocations")
     public String showAdminAllocationsPage(HttpSession session) {
 
@@ -213,7 +291,6 @@ public class HomeController {
         return "admin-allocations";
     }
 
-    // Display the Student Management page for administrators
     @GetMapping("/admin/students")
     public String showAdminStudentsPage(HttpSession session) {
 
@@ -223,5 +300,4 @@ public class HomeController {
 
         return "admin-students";
     }
-
 }

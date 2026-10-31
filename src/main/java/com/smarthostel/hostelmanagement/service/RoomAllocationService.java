@@ -11,6 +11,7 @@ import com.smarthostel.hostelmanagement.repository.RoomRepository;
 import com.smarthostel.hostelmanagement.repository.StudentRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.time.LocalDateTime;
 
 import java.util.*;
 
@@ -36,7 +37,6 @@ public class RoomAllocationService {
         this.roomRepository = roomRepository;
     }
 
-    // Include both active and previous allocations
     public List<RoomAllocation> getAllAllocations() {
         return allocationRepository.findAll();
     }
@@ -64,11 +64,9 @@ public class RoomAllocationService {
         return getOccupiedSlots(roomId) < MAX_ROOM_CAPACITY;
     }
 
-    // Run only from the admin-controlled allocation endpoint
     @Transactional
     public int allocateStudentsAutomatically() {
 
-        // Load all existing allocations once
         List<RoomAllocation> existingAllocations =
                 allocationRepository.findAll();
 
@@ -91,7 +89,6 @@ public class RoomAllocationService {
             }
         }
 
-        // Find students who do not currently have a room
         Map<Long, Student> waitingStudents = new LinkedHashMap<>();
 
         for (Student student : studentRepository.findAll()) {
@@ -104,7 +101,6 @@ public class RoomAllocationService {
             return 0;
         }
 
-        // Store all roommate preferences for faster matching
         Map<Long, Set<Long>> preferences = new HashMap<>();
 
         for (RoommatePreference preference : preferenceRepository.findAll()) {
@@ -116,8 +112,17 @@ public class RoomAllocationService {
                     .add(preferredId);
         }
 
+
         List<Room> rooms = new ArrayList<>(roomRepository.findAll());
+
         Collections.shuffle(rooms);
+
+        rooms.sort(Comparator.comparingInt(
+                (Room room) -> roomMembers
+                        .getOrDefault(room.getId(), Collections.emptyList())
+                        .size()
+        ).reversed());
+
 
         int totalAllocated = 0;
 
@@ -130,7 +135,6 @@ public class RoomAllocationService {
                     id -> new ArrayList<>()
             );
 
-            // Never exceed either the room's configured capacity or 4
             int roomLimit = Math.min(
                     room.getCapacity(),
                     MAX_ROOM_CAPACITY
@@ -148,7 +152,6 @@ public class RoomAllocationService {
                     break;
                 }
 
-                // Remove immediately to prevent duplicate allocation
                 waitingStudents.remove(selectedStudent.getId());
 
                 RoomAllocation allocation = new RoomAllocation();
@@ -165,7 +168,6 @@ public class RoomAllocationService {
         return totalAllocated;
     }
 
-    // Choose a student based on existing roommates' preferences
     private Student chooseNextStudent(
             List<Long> currentMembers,
             Map<Long, Student> waitingStudents,
@@ -180,49 +182,103 @@ public class RoomAllocationService {
 
         Collections.shuffle(candidates);
 
-        // Empty rooms start with a random student
-        if (currentMembers.isEmpty()) {
-            return candidates.get(0);
-        }
 
         Student bestCandidate = null;
-        int highestScore = 0;
+        int highestScore = -1;
 
-        for (Student candidate : candidates) {
+        if (currentMembers.isEmpty()) {
 
-            int score = 0;
-            Long candidateId = candidate.getId();
+            for (Student candidate : candidates) {
 
-            for (Long memberId : currentMembers) {
+                int totalScore = 0;
 
-                boolean memberSelectedCandidate =
-                        preferences
-                                .getOrDefault(memberId, Collections.emptySet())
-                                .contains(candidateId);
+                for (Student otherStudent : candidates) {
 
-                boolean candidateSelectedMember =
-                        preferences
-                                .getOrDefault(candidateId, Collections.emptySet())
-                                .contains(memberId);
+                    if (candidate.getId().equals(otherStudent.getId())) {
+                        continue;
+                    }
 
-                // Mutual preference gets the highest priority
-                if (memberSelectedCandidate && candidateSelectedMember) {
-                    score += 3;
-                } else if (memberSelectedCandidate
-                        || candidateSelectedMember) {
-                    score += 1;
+                    totalScore += calculatePreferenceScore(
+                            candidate.getId(),
+                            otherStudent.getId(),
+                            preferences
+                    );
+                }
+
+                if (totalScore > highestScore) {
+                    highestScore = totalScore;
+                    bestCandidate = candidate;
                 }
             }
 
-            if (score > highestScore) {
-                highestScore = score;
+            return bestCandidate;
+        }
+
+
+        for (Student candidate : candidates) {
+
+            int totalScore = 0;
+
+            for (Long memberId : currentMembers) {
+                totalScore += calculatePreferenceScore(
+                        candidate.getId(),
+                        memberId,
+                        preferences
+                );
+            }
+
+            if (totalScore > highestScore) {
+                highestScore = totalScore;
                 bestCandidate = candidate;
             }
         }
 
-        // If no preferences match, fill the space randomly
-        return bestCandidate != null
-                ? bestCandidate
-                : candidates.get(0);
+        return bestCandidate;
     }
+
+    @Transactional
+    public void vacateStudentByAdmin(Long studentId) {
+
+        if (studentId == null) {
+            throw new IllegalArgumentException(
+                    "Student ID is required."
+            );
+        }
+
+        RoomAllocation allocation = allocationRepository
+                .findByStudent_IdAndVacatedAtIsNull(studentId)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "This student does not have an active room allocation."
+                ));
+
+        allocation.setVacatedAt(LocalDateTime.now());
+
+        allocationRepository.save(allocation);
+    }
+
+    private int calculatePreferenceScore(
+            Long firstStudentId,
+            Long secondStudentId,
+            Map<Long, Set<Long>> preferences) {
+
+        boolean firstSelectedSecond = preferences
+                .getOrDefault(firstStudentId, Collections.emptySet())
+                .contains(secondStudentId);
+
+        boolean secondSelectedFirst = preferences
+                .getOrDefault(secondStudentId, Collections.emptySet())
+                .contains(firstStudentId);
+
+        if (firstSelectedSecond && secondSelectedFirst) {
+            return 3;
+        }
+
+        if (firstSelectedSecond || secondSelectedFirst) {
+            return 1;
+        }
+
+        return 0;
+    }
+
+
 }

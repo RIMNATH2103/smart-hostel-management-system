@@ -18,17 +18,14 @@ public class RoomService {
         this.roomRepository = roomRepository;
     }
 
-    // Get all hostel rooms
     public List<Room> getAllRooms() {
         return roomRepository.findAll();
     }
 
-    // Find a room by its database ID
     public Optional<Room> getRoomById(Long id) {
         return roomRepository.findById(id);
     }
 
-    // Create a new hostel room
     public Room createRoom(Room room) {
 
         if (room == null) {
@@ -45,17 +42,14 @@ public class RoomService {
             );
         }
 
-        // Remove unnecessary spaces
         roomNumber = roomNumber.trim();
 
-        // Prevent duplicate room numbers
         if (roomRepository.existsByRoomNumberIgnoreCase(roomNumber)) {
             throw new IllegalArgumentException(
                     "A room with this number already exists."
             );
         }
 
-        // Save the cleaned room number
         room.setRoomNumber(roomNumber);
 
         try {
@@ -68,7 +62,6 @@ public class RoomService {
         }
     }
 
-    // Get the maximum capacity of a room
     public int getRoomCapacity() {
         return 4;
     }

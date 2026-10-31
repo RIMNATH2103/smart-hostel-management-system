@@ -156,6 +156,28 @@
             padding: 15px 0;
         }
 
+        .vacate-button {
+            background: #bd4848;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 15px;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .vacate-button:hover {
+            background: #983535;
+        }
+
+        .vacate-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+
         @media (max-width: 600px) {
             .panel {
                 padding: 16px;
@@ -221,12 +243,13 @@
                     <th>Student Name</th>
                     <th>Room Number</th>
                     <th>Allocation Status</th>
+                    <th>Actions</th>
                 </tr>
                 </thead>
 
                 <tbody id="studentTableBody">
                 <tr>
-                    <td colspan="4" class="empty-message">
+                    <td colspan="5" class="empty-message">
                         Loading students...
                     </td>
                 </tr>
@@ -252,7 +275,7 @@
         const row = document.createElement("tr");
         const cell = document.createElement("td");
 
-        cell.colSpan = 4;
+        cell.colSpan = 5;
         cell.textContent = message;
         cell.className = isError
             ? "error-message"
@@ -295,10 +318,73 @@
 
             badge.textContent = student.allocationStatus;
 
+
             statusCell.appendChild(badge);
             row.appendChild(statusCell);
 
+            const actionCell = document.createElement("td");
+
+            if (isAllocated) {
+                const vacateButton = document.createElement("button");
+                vacateButton.type = "button";
+                vacateButton.className = "vacate-button";
+                vacateButton.textContent = "Vacate Student";
+
+                vacateButton.addEventListener("click", async function () {
+                    const confirmed = confirm(
+                        "Are you sure you want to vacate " +
+                        student.fullName + " from room " +
+                        student.roomNumber + "?"
+                    );
+
+                    if (!confirmed) {
+                        return;
+                    }
+
+                    vacateButton.disabled = true;
+                    vacateButton.textContent = "Vacating...";
+
+                    try {
+                        const response = await fetch(
+                            "/api/allocations/admin/vacate-student/" + student.id,
+                            {
+                                method: "POST",
+                                credentials: "same-origin"
+                            }
+                        );
+
+                        if (response.status === 401) {
+                            window.location.href = "/admin/login";
+                            return;
+                        }
+
+                        const result = await response.json();
+
+                        if (!response.ok) {
+                            throw new Error(
+                                result.message || "Unable to vacate student."
+                            );
+                        }
+
+                        alert("Student vacated successfully.");
+                        await loadStudents();
+
+                    } catch (error) {
+                        alert(error.message);
+                    } finally {
+                        vacateButton.disabled = false;
+                        vacateButton.textContent = "Vacate Student";
+                    }
+                });
+
+                actionCell.appendChild(vacateButton);
+            } else {
+                actionCell.textContent = "-";
+            }
+
+            row.appendChild(actionCell);
             studentTableBody.appendChild(row);
+
         }
     }
 

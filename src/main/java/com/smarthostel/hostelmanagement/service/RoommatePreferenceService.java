@@ -7,6 +7,7 @@ import com.smarthostel.hostelmanagement.repository.RoommatePreferenceRepository;
 import com.smarthostel.hostelmanagement.repository.StudentRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.smarthostel.hostelmanagement.service.RoomAllocationService;
 
 import java.util.List;
 import java.util.Optional;
@@ -16,31 +17,31 @@ public class RoommatePreferenceService {
 
     private final RoommatePreferenceRepository preferenceRepository;
     private final StudentRepository studentRepository;
+    private final RoomAllocationService allocationService;
+
 
     public RoommatePreferenceService(
             RoommatePreferenceRepository preferenceRepository,
-            StudentRepository studentRepository) {
+            StudentRepository studentRepository,
+            RoomAllocationService allocationService) {
 
         this.preferenceRepository = preferenceRepository;
         this.studentRepository = studentRepository;
+        this.allocationService = allocationService;
     }
 
-    // Get all roommate preferences
     public List<RoommatePreference> getAllPreferences() {
         return preferenceRepository.findAll();
     }
 
-    // Find a preference by its ID
     public Optional<RoommatePreference> getPreferenceById(Long id) {
         return preferenceRepository.findById(id);
     }
 
-    // Get preferences submitted by a student
     public List<RoommatePreference> getPreferencesByStudent(Long studentId) {
         return preferenceRepository.findByStudent_Id(studentId);
     }
 
-    // Save a roommate preference
     @Transactional
     public RoommatePreference savePreference(
             RoommatePreference preference) {
@@ -63,14 +64,18 @@ public class RoommatePreferenceService {
             );
         }
 
-        // Students cannot select themselves
+        if (allocationService.getCurrentAllocation(studentId).isPresent()) {
+            throw new IllegalStateException(
+                    "You cannot change roommate preferences while you have an allocated room."
+            );
+        }
+
         if (studentId.equals(preferredStudentId)) {
             throw new IllegalArgumentException(
                     "You cannot select yourself as a roommate."
             );
         }
 
-        // Make sure both students exist
         Student student = studentRepository.findById(studentId)
                 .orElseThrow(() -> new IllegalArgumentException(
                         "Student not found."
@@ -82,7 +87,6 @@ public class RoommatePreferenceService {
                                 "Preferred roommate not found."
                         ));
 
-        // Prevent duplicate roommate selections
         if (preferenceRepository
                 .existsByStudent_IdAndPreferredStudent_Id(
                         studentId, preferredStudentId)) {
@@ -92,7 +96,6 @@ public class RoommatePreferenceService {
             );
         }
 
-        // Maximum 3 preferred roommates per student
         if (preferenceRepository.countByStudent_Id(studentId) >= 3) {
             throw new IllegalArgumentException(
                     "You can select a maximum of 3 roommates."
@@ -104,4 +107,35 @@ public class RoommatePreferenceService {
 
         return preferenceRepository.save(preference);
     }
+
+    @Transactional
+    public void removePreference(Long studentId, Long preferenceId) {
+
+        if (studentId == null || preferenceId == null) {
+            throw new IllegalArgumentException(
+                    "Valid student and preference IDs are required."
+            );
+        }
+
+        if (allocationService.getCurrentAllocation(studentId).isPresent()) {
+            throw new IllegalStateException(
+                    "You cannot change roommates while you have an allocated room."
+            );
+        }
+
+        RoommatePreference preference = preferenceRepository
+                .findById(preferenceId)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Roommate preference not found."
+                ));
+
+        if (!preference.getStudent().getId().equals(studentId)) {
+            throw new IllegalArgumentException(
+                    "You cannot remove another student's preference."
+            );
+        }
+
+        preferenceRepository.delete(preference);
+    }
+
 }

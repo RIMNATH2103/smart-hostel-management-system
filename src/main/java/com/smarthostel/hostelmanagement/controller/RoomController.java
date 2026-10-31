@@ -19,13 +19,11 @@ public class RoomController {
         this.roomService = roomService;
     }
 
-    // Get all rooms
     @GetMapping
     public List<Room> getAllRooms() {
         return roomService.getAllRooms();
     }
 
-    // Get a room by ID
     @GetMapping("/{id}")
     public ResponseEntity<Room> getRoomById(
             @PathVariable Long id) {
@@ -35,7 +33,6 @@ public class RoomController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    // Create a new room
     @PostMapping
     public ResponseEntity<?> createRoom(
             @RequestBody Room room) {
@@ -54,7 +51,6 @@ public class RoomController {
         }
     }
 
-    // Get the maximum room capacity
     @GetMapping("/capacity")
     public int getRoomCapacity() {
         return roomService.getRoomCapacity();

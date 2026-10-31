@@ -174,7 +174,6 @@
                 status.textContent = request.status;
                 card.appendChild(status);
 
-// Admin remarks
                 const remarksInput = document.createElement("textarea");
                 remarksInput.placeholder = "Administrator remarks (optional)";
                 remarksInput.maxLength = 1000;
@@ -188,14 +187,12 @@
 
                 card.appendChild(remarksInput);
 
-// Button container
                 const actions = document.createElement("div");
                 actions.style.display = "flex";
                 actions.style.gap = "12px";
                 actions.style.marginTop = "15px";
                 actions.style.flexWrap = "wrap";
 
-// Approve button
                 const approveButton = document.createElement("button");
                 approveButton.textContent = "Approve";
                 approveButton.style.background = "#168b83";
@@ -205,7 +202,6 @@
                 approveButton.style.borderRadius = "9px";
                 approveButton.style.cursor = "pointer";
 
-// Reject button
                 const rejectButton = document.createElement("button");
                 rejectButton.textContent = "Reject";
                 rejectButton.style.background = "#b53e52";
