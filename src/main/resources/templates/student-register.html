@@ -7,29 +7,60 @@
     <title>Student Registration | Smart Hostel</title>
     <link rel="stylesheet" th:href="@{/css/style.css}" href="/css/style.css">
 
+
+
     <style>
-        .registration-card {
+        /* Student registration layout - matching admin registration */
+        .login-page .login-card.registration-card {
             width: 100%;
-            max-width: 520px;
+            max-width: 1200px;
+            min-height: 800px;
+            flex: 0 1 1200px;
+            padding: 45px 50% 45px 55px;
+            box-sizing: border-box;
+        }
+
+        /* Purple panel on the right */
+        .login-page .registration-card::before {
+            display: block;
+            width: 45%;
+        }
+
+        .login-page .registration-card::after {
+            display: block;
+            width: 35%;
+        }
+
+        /* Keep the left-side content properly sized */
+        .registration-card .login-heading,
+        .registration-card #registrationForm,
+        .registration-card .login-footer-text {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            min-width: 0;
         }
 
         .registration-card .form-group {
-            margin-bottom: 17px;
+            width: 100%;
+            margin-bottom: 18px;
         }
 
-        .registration-card input {
+        .registration-card .form-group label {
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .registration-card .form-group input {
+            display: block;
             width: 100%;
+            min-width: 0;
+            padding: 14px 15px;
             box-sizing: border-box;
         }
 
         .registration-card .login-submit {
             width: 100%;
-        }
-
-        .registration-note {
-            font-size: 13px;
-            color: #777;
-            margin-top: 6px;
         }
 
         .registration-message {
@@ -42,7 +73,30 @@
             color: #7850bb;
             font-weight: 600;
         }
+
+        /* Responsive layout */
+        @media (max-width: 1100px) {
+            .login-page .login-card.registration-card {
+                max-width: 520px;
+                min-height: auto;
+                flex: 0 1 520px;
+                padding: 40px;
+            }
+
+            .login-page .registration-card::before,
+            .login-page .registration-card::after {
+                display: none;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .login-page .login-card.registration-card {
+                padding: 28px 22px;
+            }
+        }
     </style>
+
+
 </head>
 
 <body class="login-page">
